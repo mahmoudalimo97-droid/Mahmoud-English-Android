@@ -23,7 +23,7 @@ function getAudioContext(): AudioContext | null {
 /**
  * Play subtle, polished UI sound effects (Tap, Success, Pop, Chime)
  */
-export function playUiSound(type: 'tap' | 'success' | 'pop' | 'chime' = 'tap') {
+export function playUiSound(type: 'tap' | 'success' | 'pop' | 'chime' | 'shutter' = 'tap') {
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -35,7 +35,15 @@ export function playUiSound(type: 'tap' | 'success' | 'pop' | 'chime' = 'tap') {
 
     const now = ctx.currentTime;
 
-    if (type === 'tap') {
+    if (type === 'shutter') {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(800, now);
+      osc.frequency.exponentialRampToValueAtTime(200, now + 0.06);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
+      osc.start(now);
+      osc.stop(now + 0.06);
+    } else if (type === 'tap') {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(320, now);
       osc.frequency.exponentialRampToValueAtTime(160, now + 0.05);

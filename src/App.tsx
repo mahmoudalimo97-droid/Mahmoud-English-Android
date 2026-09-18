@@ -22,6 +22,7 @@ import { AndroidProjectModal } from './components/AndroidProjectModal';
 import { AndroidInstallGuideModal } from './components/AndroidInstallGuideModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { usePWAInstall } from './hooks/usePWAInstall';
+import { useLanguage } from './context/LanguageContext';
 
 import {
   ThemeStyle,
@@ -36,12 +37,14 @@ import { DEFAULT_VOCABULARY } from './data/defaultVocab';
 import { playUiSound, speakWordWithExplanation } from './utils/speech';
 
 export default function App() {
+  const { language, t } = useLanguage();
+
   // Navigation tabs
   const [currentTab, setCurrentTab] = useState<
     'camera' | 'vocab' | 'chat' | 'lessons' | 'game' | 'tips'
   >('camera');
 
-  // Themes: Sage Cream (Eye-friendly), Warm Parchment (Book Read), Night Forest (Eye-safe dark)
+  // Themes: Light modern (Eye-friendly), Warm Parchment (Book Read), Night Forest (Eye-safe dark)
   const [theme, setTheme] = useState<ThemeStyle>(
     (StorageService.getTheme() as ThemeStyle) || 'sage-cream'
   );
@@ -73,7 +76,6 @@ export default function App() {
   // Load persistent data from storage on mount
   const refreshStorageData = () => {
     const storedCustomWords = StorageService.getSavedWords();
-    // Merge default rich vocabulary with user-custom/saved words
     const mergedWords = [...storedCustomWords];
     DEFAULT_VOCABULARY.forEach((defaultWord) => {
       if (!mergedWords.some((w) => w.english.toLowerCase() === defaultWord.english.toLowerCase())) {
@@ -125,7 +127,10 @@ export default function App() {
       id: 'chat-' + Date.now(),
       role: 'user',
       content: text,
-      timestamp: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+      timestamp: new Date().toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
     };
 
     const newHistory = [...chatMessages, userMsg];
@@ -146,13 +151,18 @@ export default function App() {
       const data = await res.json();
       const replyContent =
         data.reply ||
-        'عفواً، واجهت مشكلة في معالجة طلبك حالياً، هل يمكنك إعادة صياغة السؤال؟';
+        (language === 'ar'
+          ? 'عفواً، واجهت مشكلة في معالجة طلبك حالياً، هل يمكنك إعادة صياغة السؤال؟'
+          : 'Sorry, I encountered an issue processing your request. Could you rephrase your question?');
 
       const botMsg: ChatMessage = {
         id: 'chat-bot-' + Date.now(),
         role: 'assistant',
         content: replyContent,
-        timestamp: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+        timestamp: new Date().toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
       };
 
       const updatedHistory = [...newHistory, botMsg];
@@ -164,8 +174,13 @@ export default function App() {
         id: 'chat-err-' + Date.now(),
         role: 'assistant',
         content:
-          'مرحباً بك يا بطل! يسعدني دائماً مساعدتك في التدرب على الإنجليزية. هل تود أن نراجع نطق كلمات الكاميرا أو نجري محادثة سريعة في المطعم؟',
-        timestamp: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+          language === 'ar'
+            ? 'مرحباً بك يا بطل! يسعدني دائماً مساعدتك في التدرب على الإنجليزية. هل تود أن نراجع نطق كلمات الكاميرا أو نجري محادثة سريعة في المطعم؟'
+            : 'Welcome champion! I am always glad to assist you in practicing English. Would you like to review camera words or have a quick dialogue?',
+        timestamp: new Date().toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
       };
       const updatedHistory = [...newHistory, fallbackMsg];
       setChatMessages(updatedHistory);
@@ -192,22 +207,26 @@ export default function App() {
     setProgress((prev) => ({ ...prev, gameHighScore: updated }));
   };
 
-  // Eye-friendly dynamic background and color tone classes
+  // Dynamic voice assistance on tab switch
   const handleSelectTab = (tab: 'camera' | 'vocab' | 'chat' | 'lessons' | 'game' | 'tips') => {
     playUiSound('tap');
     setCurrentTab(tab);
     if (isVoiceAssistActive) {
       const tabVoiceMap: Record<string, { en: string; ar: string }> = {
-        camera: { en: 'Camera Translation', ar: 'ترجمة الكاميرا وتحليل الصور' },
-        vocab: { en: 'Speaking Vocabulary', ar: 'قاموس الكلمات المصور والناطق' },
+        camera: { en: 'Camera Translation', ar: 'ترجمة الكاميرا' },
+        vocab: { en: 'Speaking Vocabulary', ar: 'قاموس الكلمات الناطقة' },
         chat: { en: 'AI English Tutor', ar: 'شات المعلم الذكي' },
-        lessons: { en: 'Lessons and Quizzes', ar: 'الدروس التفاعلية والاختبارات' },
-        game: { en: 'Educational Challenge', ar: 'لعبة التحدي التعليمية' },
-        tips: { en: 'Learning Tips', ar: 'نصائح وأسرار التحدث' },
+        lessons: { en: 'Lessons and Quizzes', ar: 'الدروس والاختبارات' },
+        game: { en: 'Educational Game', ar: 'اللعبة التعليمية' },
+        tips: { en: 'Learning Tips', ar: 'نصائح باللغة العربية' },
       };
       const info = tabVoiceMap[tab];
       if (info) {
-        speakWordWithExplanation(info.en, info.ar);
+        if (language === 'ar') {
+          speakWordWithExplanation(info.en, info.ar);
+        } else {
+          speakWordWithExplanation(info.ar, info.en);
+        }
       }
     }
   };
@@ -215,17 +234,19 @@ export default function App() {
   const getThemeClass = () => {
     switch (theme) {
       case 'warm-parchment':
-        return 'bg-[#F9F7F1] text-[#2C2416]';
+        return 'bg-[#FAF8F5] text-slate-900';
       case 'night-forest':
-        return 'bg-[#12231A] text-[#E7EFE9]';
+        return 'bg-[#0f172a] text-slate-100';
       case 'sage-cream':
       default:
-        return 'bg-[#F6F7F3] text-[#1E2822]';
+        return 'bg-gradient-to-br from-slate-50 via-blue-50/20 to-teal-50/20 text-slate-900';
     }
   };
 
   return (
-    <div className={`min-h-screen ${getThemeClass()} transition-colors duration-300 flex flex-col font-sans`}>
+    <div
+      className={`min-h-screen ${getThemeClass()} transition-colors duration-300 flex flex-col font-sans`}
+    >
       {/* Header Bar */}
       <Header
         theme={theme}
@@ -247,90 +268,90 @@ export default function App() {
         <div
           className={`w-full transition-all duration-300 ${
             isPhoneFrame
-              ? 'max-w-[440px] bg-stone-50/50 rounded-[42px] p-4 sm:p-5 border-8 border-stone-800 shadow-2xl relative my-auto'
+              ? 'max-w-[440px] bg-white/95 rounded-[42px] p-4 sm:p-5 border-8 border-slate-900 shadow-2xl relative my-auto'
               : 'max-w-4xl'
           }`}
         >
-          {/* Phone Frame Speaker Notch (Visual authenticity when phone frame is active) */}
+          {/* Phone Frame Speaker Notch */}
           {isPhoneFrame && (
-            <div className="w-28 h-4 bg-stone-800 rounded-full mx-auto mb-4 flex items-center justify-center gap-2">
-              <div className="w-10 h-1.5 bg-stone-700 rounded-full"></div>
-              <div className="w-2 h-2 bg-stone-700 rounded-full"></div>
+            <div className="w-28 h-4 bg-slate-900 rounded-full mx-auto mb-4 flex items-center justify-center gap-2">
+              <div className="w-10 h-1.5 bg-slate-700 rounded-full"></div>
+              <div className="w-2 h-2 bg-slate-700 rounded-full"></div>
             </div>
           )}
 
           {/* Desktop & Tablet Top Navigation Tabs */}
-          <nav className="mb-5 bg-white/80 backdrop-blur-md p-1.5 rounded-2xl border border-stone-200 shadow-2xs hidden sm:flex items-center justify-between gap-1">
+          <nav className="mb-5 bg-white/90 backdrop-blur-md p-1.5 rounded-2xl border border-slate-200/90 shadow-2xs hidden sm:flex items-center justify-between gap-1">
             <button
               onClick={() => handleSelectTab('camera')}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all ${
                 currentTab === 'camera'
-                  ? 'bg-emerald-800 text-white shadow-xs'
-                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+                  ? 'bg-gradient-to-r from-blue-700 via-indigo-600 to-teal-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               <Camera className="w-4 h-4" />
-              <span>ترجمة الكاميرا</span>
+              <span>{t('tabCamera')}</span>
             </button>
 
             <button
               onClick={() => handleSelectTab('vocab')}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all ${
                 currentTab === 'vocab'
-                  ? 'bg-emerald-800 text-white shadow-xs'
-                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+                  ? 'bg-gradient-to-r from-blue-700 via-indigo-600 to-teal-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               <Volume2 className="w-4 h-4" />
-              <span>كلمات ناطقة</span>
+              <span>{t('tabVocab')}</span>
             </button>
 
             <button
               onClick={() => handleSelectTab('chat')}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all ${
                 currentTab === 'chat'
-                  ? 'bg-emerald-800 text-white shadow-xs'
-                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+                  ? 'bg-gradient-to-r from-blue-700 via-indigo-600 to-teal-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               <MessageSquare className="w-4 h-4" />
-              <span>شات المعلم الذكي</span>
+              <span>{t('tabChat')}</span>
             </button>
 
             <button
               onClick={() => handleSelectTab('lessons')}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all ${
                 currentTab === 'lessons'
-                  ? 'bg-emerald-800 text-white shadow-xs'
-                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+                  ? 'bg-gradient-to-r from-blue-700 via-indigo-600 to-teal-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               <GraduationCap className="w-4 h-4" />
-              <span>دروس واختبارات</span>
+              <span>{t('tabLessons')}</span>
             </button>
 
             <button
               onClick={() => handleSelectTab('game')}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all ${
                 currentTab === 'game'
-                  ? 'bg-emerald-800 text-white shadow-xs'
-                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+                  ? 'bg-gradient-to-r from-blue-700 via-indigo-600 to-teal-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               <Gamepad2 className="w-4 h-4" />
-              <span>لعبة تعليمية</span>
+              <span>{t('tabGame')}</span>
             </button>
 
             <button
               onClick={() => handleSelectTab('tips')}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all ${
                 currentTab === 'tips'
-                  ? 'bg-emerald-800 text-white shadow-xs'
-                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+                  ? 'bg-gradient-to-r from-blue-700 via-indigo-600 to-teal-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               <Lightbulb className="w-4 h-4" />
-              <span>نصائح بالعربي</span>
+              <span>{t('tabTips')}</span>
             </button>
           </nav>
 
@@ -383,66 +404,78 @@ export default function App() {
         </div>
       </main>
 
-      {/* Mobile Native Bottom Navigation Bar (Always convenient on phone) */}
-      <nav className="sm:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-lg border-t border-stone-200 z-40 py-1 px-2 flex items-center justify-around shadow-lg">
+      {/* Mobile Native Bottom Navigation Bar */}
+      <nav className="sm:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-lg border-t border-slate-200 z-40 py-1.5 px-2 flex items-center justify-around shadow-lg">
         <button
           onClick={() => handleSelectTab('camera')}
-          className={`flex flex-col items-center py-1 px-2 rounded-xl transition-colors ${
-            currentTab === 'camera' ? 'text-emerald-800 font-bold' : 'text-stone-500'
+          className={`flex flex-col items-center py-1 px-2 rounded-xl transition-all ${
+            currentTab === 'camera'
+              ? 'text-blue-700 font-bold scale-105'
+              : 'text-slate-500 hover:text-slate-800'
           }`}
         >
           <Camera className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5">الكاميرا</span>
+          <span className="text-[10px] mt-0.5">{t('tabCamera')}</span>
         </button>
 
         <button
           onClick={() => handleSelectTab('vocab')}
-          className={`flex flex-col items-center py-1 px-2 rounded-xl transition-colors ${
-            currentTab === 'vocab' ? 'text-emerald-800 font-bold' : 'text-stone-500'
+          className={`flex flex-col items-center py-1 px-2 rounded-xl transition-all ${
+            currentTab === 'vocab'
+              ? 'text-blue-700 font-bold scale-105'
+              : 'text-slate-500 hover:text-slate-800'
           }`}
         >
           <Volume2 className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5">الكلمات</span>
+          <span className="text-[10px] mt-0.5">{t('tabVocab')}</span>
         </button>
 
         <button
           onClick={() => handleSelectTab('chat')}
-          className={`flex flex-col items-center py-1 px-2 rounded-xl transition-colors ${
-            currentTab === 'chat' ? 'text-emerald-800 font-bold' : 'text-stone-500'
+          className={`flex flex-col items-center py-1 px-2 rounded-xl transition-all ${
+            currentTab === 'chat'
+              ? 'text-blue-700 font-bold scale-105'
+              : 'text-slate-500 hover:text-slate-800'
           }`}
         >
           <MessageSquare className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5">المعلم</span>
+          <span className="text-[10px] mt-0.5">{t('tabChat')}</span>
         </button>
 
         <button
           onClick={() => handleSelectTab('lessons')}
-          className={`flex flex-col items-center py-1 px-2 rounded-xl transition-colors ${
-            currentTab === 'lessons' ? 'text-emerald-800 font-bold' : 'text-stone-500'
+          className={`flex flex-col items-center py-1 px-2 rounded-xl transition-all ${
+            currentTab === 'lessons'
+              ? 'text-blue-700 font-bold scale-105'
+              : 'text-slate-500 hover:text-slate-800'
           }`}
         >
           <GraduationCap className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5">الاختبار</span>
+          <span className="text-[10px] mt-0.5">{t('tabLessons')}</span>
         </button>
 
         <button
           onClick={() => handleSelectTab('game')}
-          className={`flex flex-col items-center py-1 px-2 rounded-xl transition-colors ${
-            currentTab === 'game' ? 'text-emerald-800 font-bold' : 'text-stone-500'
+          className={`flex flex-col items-center py-1 px-2 rounded-xl transition-all ${
+            currentTab === 'game'
+              ? 'text-blue-700 font-bold scale-105'
+              : 'text-slate-500 hover:text-slate-800'
           }`}
         >
           <Gamepad2 className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5">اللعبة</span>
+          <span className="text-[10px] mt-0.5">{t('tabGame')}</span>
         </button>
 
         <button
           onClick={() => handleSelectTab('tips')}
-          className={`flex flex-col items-center py-1 px-2 rounded-xl transition-colors ${
-            currentTab === 'tips' ? 'text-emerald-800 font-bold' : 'text-stone-500'
+          className={`flex flex-col items-center py-1 px-2 rounded-xl transition-all ${
+            currentTab === 'tips'
+              ? 'text-blue-700 font-bold scale-105'
+              : 'text-slate-500 hover:text-slate-800'
           }`}
         >
           <Lightbulb className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5">نصائح</span>
+          <span className="text-[10px] mt-0.5">{t('tabTips')}</span>
         </button>
       </nav>
 

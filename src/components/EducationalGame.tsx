@@ -11,10 +11,12 @@ import {
   Timer,
   Play,
   HelpCircle,
+  Zap,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { GAME_QUESTIONS, GameQuestion } from '../data/gameWords';
 import { speakEnglish, speakWordWithExplanation, playUiSound } from '../utils/speech';
+import { useLanguage } from '../context/LanguageContext';
 
 interface EducationalGameProps {
   highScore: number;
@@ -25,6 +27,7 @@ export const EducationalGame: React.FC<EducationalGameProps> = ({
   highScore,
   onUpdateHighScore,
 }) => {
+  const { language, t } = useLanguage();
   const [gameMode, setGameMode] = useState<'match' | 'audio' | 'puzzle'>('match');
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentQIndex, setCurrentQIndex] = useState<number>(0);
@@ -37,7 +40,7 @@ export const EducationalGame: React.FC<EducationalGameProps> = ({
 
   const currentQ: GameQuestion = GAME_QUESTIONS[currentQIndex % GAME_QUESTIONS.length];
 
-  // Game timer countdown
+  // Countdown timer
   useEffect(() => {
     let timer: any = null;
     if (isPlaying && !isAnswerChecked && !gameOver && timeLeft > 0) {
@@ -54,7 +57,7 @@ export const EducationalGame: React.FC<EducationalGameProps> = ({
     return () => clearInterval(timer);
   }, [isPlaying, isAnswerChecked, gameOver, timeLeft]);
 
-  // Audio trigger when question changes in game
+  // Audio trigger on question change in audio mode
   useEffect(() => {
     if (isPlaying && !isAnswerChecked && currentQ) {
       if (gameMode === 'audio') {
@@ -114,7 +117,6 @@ export const EducationalGame: React.FC<EducationalGameProps> = ({
 
   const moveToNextQuestion = () => {
     if (currentQIndex + 1 >= GAME_QUESTIONS.length) {
-      // Game ended
       setGameOver(true);
       setIsPlaying(false);
       playUiSound('chime');
@@ -149,278 +151,211 @@ export const EducationalGame: React.FC<EducationalGameProps> = ({
   return (
     <div className="space-y-5">
       {/* Top Banner & High Score */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-white border border-stone-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+      <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
         <div>
-          <h3 className="text-base sm:text-lg font-bold text-stone-900 flex items-center gap-2">
-            <div className="w-9 h-9 rounded-2xl bg-emerald-800 text-white flex items-center justify-center shadow-xs">
-              <Gamepad2 className="w-5 h-5" />
+          <h3 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-500 text-white flex items-center justify-center shadow-xs">
+              <Gamepad2 className="w-5 h-5 text-amber-300" />
             </div>
-            <span>لعبة التحدي المصورة والناطقة</span>
+            <span>{t('gameHeroTitle')}</span>
           </h3>
-          <p className="text-xs text-stone-500 mt-0.5">
-            لعبة بصرية تفاعلية بالصور والنطق الصوتي لترسيخ الكلمات
+          <p className="text-xs text-slate-500 mt-0.5">
+            {t('gameHeroSubtitle')}
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
-          <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold shadow-2xs">
+          <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 text-amber-950 text-xs font-bold shadow-2xs">
             <Trophy className="w-4 h-4 text-amber-600" />
-            <span>أعلى نتيجة: {highScore} نقطة</span>
+            <span>{t('highScoreBadge', { highScore })}</span>
           </div>
 
           {streak > 1 && (
             <div className="flex items-center gap-1 px-3 py-1.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold animate-bounce">
               <Flame className="w-4 h-4 text-rose-600" />
-              <span>{streak}x حماس</span>
+              <span>{streak}x {language === 'ar' ? 'حماس' : 'Combo'}</span>
             </div>
           )}
         </div>
       </div>
 
       {/* Mode Selector (When not playing) */}
-      {!isPlaying && (
+      {!isPlaying && !gameOver && (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2 bg-slate-100 p-1 rounded-2xl border border-slate-200">
             <button
               onClick={() => {
                 playUiSound('tap');
                 setGameMode('match');
               }}
-              className={`p-4 rounded-3xl border text-right transition-all space-y-1.5 ${
+              className={`py-2 px-3 rounded-xl text-xs font-bold transition-all ${
                 gameMode === 'match'
-                  ? 'bg-emerald-50/80 border-emerald-700 shadow-xs'
-                  : 'bg-white border-stone-200 hover:border-stone-300'
+                  ? 'bg-white text-blue-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <span className="text-2xl block">🖼️</span>
-              <h4 className="font-bold text-stone-900 text-xs sm:text-sm">
-                تحدي الصور والمطابقة السريعة
-              </h4>
-              <p className="text-[11px] text-stone-500">
-                شاهد الصورة والكلمة الإنجليزية واختر الترجمة الصحيحة
-              </p>
+              {t('modeMatch')}
             </button>
-
             <button
               onClick={() => {
                 playUiSound('tap');
                 setGameMode('audio');
               }}
-              className={`p-4 rounded-3xl border text-right transition-all space-y-1.5 ${
+              className={`py-2 px-3 rounded-xl text-xs font-bold transition-all ${
                 gameMode === 'audio'
-                  ? 'bg-emerald-50/80 border-emerald-700 shadow-xs'
-                  : 'bg-white border-stone-200 hover:border-stone-300'
+                  ? 'bg-white text-blue-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <span className="text-2xl block">🎧</span>
-              <h4 className="font-bold text-stone-900 text-xs sm:text-sm">
-                تحدي الاستماع الصوتي
-              </h4>
-              <p className="text-[11px] text-stone-500">
-                استمع للنطق الصوتي الفوري وخمن معنى الكلمة من الصوت
-              </p>
+              {t('modeAudio')}
             </button>
-
             <button
               onClick={() => {
                 playUiSound('tap');
                 setGameMode('puzzle');
               }}
-              className={`p-4 rounded-3xl border text-right transition-all space-y-1.5 ${
+              className={`py-2 px-3 rounded-xl text-xs font-bold transition-all ${
                 gameMode === 'puzzle'
-                  ? 'bg-emerald-50/80 border-emerald-700 shadow-xs'
-                  : 'bg-white border-stone-200 hover:border-stone-300'
+                  ? 'bg-white text-blue-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <span className="text-2xl block">🧩</span>
-              <h4 className="font-bold text-stone-900 text-xs sm:text-sm">
-                لغز إكمال الحروف المفقودة
-              </h4>
-              <p className="text-[11px] text-stone-500">
-                أكمل الحروف الناقصة في الكلمة مع الاستماع لنطقها
-              </p>
+              {t('modePuzzle')}
             </button>
           </div>
 
-          {/* Game Over Scorecard or Start Screen */}
-          {gameOver ? (
-            <div className="p-8 rounded-3xl bg-white border border-stone-200 text-center space-y-4 shadow-md max-w-md mx-auto">
-              <div className="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-800 mx-auto flex items-center justify-center text-3xl">
-                🏆
-              </div>
-              <h4 className="text-xl font-bold text-stone-900">انتهت جولة التحدي!</h4>
-              <p className="text-sm text-stone-600">
-                حققت مجموع <span className="font-bold text-emerald-800 text-lg">{score}</span> نقطة
+          <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-blue-700 via-indigo-700 to-teal-600 text-white text-center space-y-4 shadow-lg shadow-indigo-500/20">
+            <div className="w-16 h-16 rounded-3xl bg-white/15 backdrop-blur-md flex items-center justify-center mx-auto text-3xl shadow-inner">
+              🎮
+            </div>
+            <div className="max-w-sm mx-auto space-y-1">
+              <h4 className="text-xl font-bold">{t('gameHeroTitle')}</h4>
+              <p className="text-xs text-blue-100/90 leading-relaxed">
+                {t('gameHeroSubtitle')}
               </p>
-
-              <button
-                onClick={startGame}
-                className="w-full py-3.5 rounded-2xl bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-sm shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
-              >
-                <RotateCcw className="w-4 h-4" />
-                <span>العب جولة جديدة الآن</span>
-              </button>
             </div>
-          ) : (
-            <div className="p-6 rounded-3xl bg-gradient-to-br from-emerald-900 to-teal-950 text-white text-center space-y-4 shadow-lg">
-              <div className="max-w-md mx-auto space-y-2">
-                <h4 className="text-lg sm:text-xl font-bold">جاهز لاختبار مهاراتك الإنجليزية؟</h4>
-                <p className="text-xs text-emerald-200/90 leading-relaxed">
-                  ستعرض لك اللعبة صوراً وكلمات إنجليزية ناطقة ولديك 10 ثوانٍ لكل سؤال.
-                </p>
-              </div>
 
-              <button
-                onClick={startGame}
-                className="px-8 py-3.5 rounded-2xl bg-white text-emerald-950 font-bold text-sm hover:bg-emerald-50 transition-all shadow-md active:scale-95 inline-flex items-center gap-2"
-              >
-                <Play className="w-4 h-4 fill-current" />
-                <span>ابدأ التحدي الآن</span>
-              </button>
-            </div>
-          )}
+            <button
+              onClick={startGame}
+              className="px-8 py-3.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-sm shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center gap-2 mx-auto"
+            >
+              <Play className="w-4 h-4 fill-slate-950" />
+              <span>{t('startGameBtn')}</span>
+            </button>
+          </div>
         </div>
       )}
 
-      {/* ACTIVE GAMEPLAY CARD */}
+      {/* Game Playing Screen */}
       {isPlaying && currentQ && (
-        <div className="max-w-md mx-auto space-y-4">
-          {/* Status Bar */}
-          <div className="flex items-center justify-between px-2 text-xs font-semibold">
-            <span className="text-stone-500">
-              السؤال {currentQIndex + 1} من {GAME_QUESTIONS.length}
-            </span>
-
-            <div className="flex items-center gap-3">
-              <span className="text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-xl">
-                النقاط: {score}
+        <div className="space-y-4 max-w-lg mx-auto">
+          {/* Header Stats Bar */}
+          <div className="flex items-center justify-between bg-white p-3 rounded-2xl border border-slate-200 text-xs font-bold shadow-xs">
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500">
+                {currentQIndex + 1} / {GAME_QUESTIONS.length}
               </span>
+              <span className="text-blue-700">
+                {t('scoreBadge', { score })}
+              </span>
+            </div>
 
-              {/* Timer Pill */}
-              <div
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-xl font-mono ${
-                  timeLeft <= 3
-                    ? 'bg-rose-100 text-rose-800 animate-pulse font-bold'
-                    : 'bg-stone-100 text-stone-700'
-                }`}
-              >
-                <Timer className="w-3.5 h-3.5" />
-                <span>{timeLeft} ث</span>
-              </div>
+            <div className="flex items-center gap-1 text-amber-700 bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200">
+              <Timer className="w-3.5 h-3.5" />
+              <span>{t('timeLeftLabel', { seconds: timeLeft })}</span>
             </div>
           </div>
 
-          {/* Progress bar */}
-          <div className="w-full bg-stone-200 h-2 rounded-full overflow-hidden">
-            <div
-              className="bg-emerald-700 h-full transition-all duration-300"
-              style={{
-                width: `${((currentQIndex + 1) / GAME_QUESTIONS.length) * 100}%`,
-              }}
-            ></div>
-          </div>
-
-          {/* Question Card with Illustrative Picture */}
-          <div className="rounded-3xl bg-white border-2 border-stone-200 overflow-hidden shadow-md space-y-3">
-            {/* Illustrative Image & Emoji */}
-            {gameMode !== 'audio' && currentQ.imageUrl && (
-              <div className="relative h-44 w-full bg-stone-100 overflow-hidden">
-                <img
-                  src={currentQ.imageUrl}
-                  alt={currentQ.word}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                <span className="absolute top-3 right-3 text-2xl bg-white/90 backdrop-blur-md w-10 h-10 rounded-2xl flex items-center justify-center shadow-xs">
-                  {currentQ.iconEmoji || '✨'}
-                </span>
+          {/* Question Card */}
+          <div className="p-6 rounded-3xl bg-white border-2 border-slate-200/90 shadow-md text-center space-y-4">
+            {/* Visual Word Card */}
+            {gameMode !== 'audio' ? (
+              <div className="space-y-2">
+                <span className="text-4xl">{currentQ.iconEmoji || '✨'}</span>
+                <h4 className="text-3xl font-bold text-slate-900 font-serif">
+                  {currentQ.word}
+                </h4>
+                {currentQ.phonetic && (
+                  <p className="text-xs font-mono text-teal-700 bg-teal-50 inline-block px-3 py-0.5 rounded-lg border border-teal-100">
+                    {currentQ.phonetic}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3 py-4">
+                <button
+                  onClick={() => handlePlayWordAudio()}
+                  className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-blue-700 to-teal-600 text-white flex items-center justify-center mx-auto shadow-lg hover:scale-105 active:scale-95 transition-all"
+                >
+                  <Volume2 className="w-8 h-8 animate-pulse" />
+                </button>
+                <p className="text-xs text-slate-500">
+                  {language === 'ar'
+                    ? 'استمع جيداً للصوت ثم اختر المعنى الصحيح'
+                    : 'Listen carefully and select the correct translation'}
+                </p>
               </div>
             )}
 
-            <div className="p-5 text-center space-y-3">
-              {/* If audio mode, hide text and show big speaker icon */}
-              {gameMode === 'audio' ? (
-                <div className="py-6 space-y-3">
-                  <button
-                    onClick={handlePlayWordAudio}
-                    className="w-20 h-20 rounded-3xl bg-emerald-800 text-white mx-auto flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all"
-                  >
-                    <Volume2 className="w-9 h-9 animate-pulse" />
-                  </button>
-                  <p className="text-xs text-stone-500">اضغط للاستماع مجدداً للكلمة 🎧</p>
-                </div>
-              ) : gameMode === 'puzzle' && currentQ.missingWordPuzzle ? (
-                <div className="space-y-1">
-                  <div className="text-3xl font-mono font-bold tracking-widest text-emerald-950">
-                    {currentQ.missingWordPuzzle.template}
-                  </div>
-                  <p className="text-xs text-stone-500 font-serif">
-                    اختر الترجمة الصحيحة لهذه الكلمة
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  <h4 className="text-3xl font-bold font-serif text-stone-900 tracking-tight">
-                    {currentQ.word}
-                  </h4>
-                  <p className="text-xs font-mono text-emerald-800">{currentQ.phonetic}</p>
-                </div>
-              )}
+            {/* Answer Options Grid */}
+            <div className="grid grid-cols-2 gap-2.5 pt-2">
+              {currentQ.options.map((opt, idx) => {
+                let btnColor =
+                  'bg-slate-50 hover:bg-blue-50/70 border-slate-200 text-slate-800';
 
-              {/* Audio Pronunciation Pill inside Card */}
-              <div className="flex items-center justify-center gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={handlePlayWordAudio}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold flex items-center gap-1 transition-colors"
-                >
-                  <Volume2 className="w-3.5 h-3.5" />
-                  <span>نطق بالإنجليزية</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handlePlayBilingualAudio}
-                  className="px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 text-xs font-medium flex items-center gap-1 transition-colors"
-                >
-                  <span>نطق وشرح صوتي 🗣️</span>
-                </button>
-              </div>
-
-              {/* Options */}
-              <div className="grid grid-cols-2 gap-2.5 pt-2">
-                {currentQ.options.map((option, idx) => {
-                  const isSelected = selectedAnswer === idx;
-                  const isCorrect = idx === currentQ.correctIndex;
-
-                  let style =
-                    'bg-stone-50 border-stone-200 text-stone-800 hover:bg-stone-100 active:scale-95';
-
-                  if (isAnswerChecked) {
-                    if (isCorrect) {
-                      style = 'bg-emerald-100 border-emerald-500 text-emerald-950 font-bold shadow-xs';
-                    } else if (isSelected && !isCorrect) {
-                      style = 'bg-rose-100 border-rose-500 text-rose-950 font-bold';
-                    } else {
-                      style = 'bg-stone-50 border-stone-200 text-stone-400 opacity-50';
-                    }
+                if (isAnswerChecked) {
+                  if (idx === currentQ.correctIndex) {
+                    btnColor = 'bg-teal-100 border-teal-500 text-teal-950 font-bold';
+                  } else if (selectedAnswer === idx) {
+                    btnColor = 'bg-rose-100 border-rose-500 text-rose-950 font-bold';
+                  } else {
+                    btnColor = 'bg-slate-50 border-slate-200 opacity-50';
                   }
+                }
 
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => handleSelectOption(idx)}
-                      disabled={isAnswerChecked}
-                      className={`p-3.5 rounded-2xl border text-sm font-semibold transition-all ${style}`}
-                    >
-                      {option}
-                    </button>
-                  );
-                })}
-              </div>
+                return (
+                  <button
+                    key={idx}
+                    disabled={isAnswerChecked}
+                    onClick={() => handleSelectOption(idx)}
+                    className={`p-3.5 rounded-2xl border text-sm font-bold transition-all shadow-2xs active:scale-98 ${btnColor}`}
+                  >
+                    {opt}
+                  </button>
+                );
+              })}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Game Over Screen */}
+      {gameOver && (
+        <div className="p-8 sm:p-12 rounded-3xl bg-white border-2 border-slate-200 text-center space-y-4 max-w-md mx-auto shadow-md">
+          <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-amber-400 to-orange-400 text-white flex items-center justify-center mx-auto text-3xl shadow-md">
+            🏆
+          </div>
+          <div>
+            <h4 className="text-xl font-bold text-slate-900">
+              {t('gameOverTitle')}
+            </h4>
+            <p className="text-sm text-slate-500 mt-1">
+              {t('finalScoreLabel')} <span className="font-bold text-blue-700 text-lg">{score}</span>
+            </p>
+            {score >= highScore && score > 0 && (
+              <p className="text-xs font-bold text-amber-600 mt-1">
+                {t('newRecordBadge')}
+              </p>
+            )}
+          </div>
+
+          <button
+            onClick={startGame}
+            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-700 via-indigo-600 to-teal-600 hover:from-blue-800 hover:to-teal-700 text-white font-bold text-sm shadow-md transition-all active:scale-98 flex items-center justify-center gap-2"
+          >
+            <RotateCcw className="w-4 h-4" />
+            <span>{t('playAgainBtn')}</span>
+          </button>
         </div>
       )}
     </div>
