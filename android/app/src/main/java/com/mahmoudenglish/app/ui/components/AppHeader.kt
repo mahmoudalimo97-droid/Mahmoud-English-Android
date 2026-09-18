@@ -2,7 +2,9 @@ package com.mahmoudenglish.app.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -31,23 +33,27 @@ fun AppHeader(
     onOpenMemoryModal: () -> Unit,
     onLogoWelcomeSpeech: () -> Unit
 ) {
+    val scrollState = rememberScrollState()
+
     Surface(
         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
         tonalElevation = 2.dp,
-        shadowElevation = 2.dp,
+        shadowElevation = 3.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 10.dp)
+                .padding(horizontal = 14.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            // Row 1: Brand & Logo + Streak
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Left: Logo & Brand
+                // Logo & Brand Name
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -70,7 +76,7 @@ fun AppHeader(
                         // Tiny audio indicator dot
                         Box(
                             modifier = Modifier
-                                .size(12.dp)
+                                .size(10.dp)
                                 .align(Alignment.BottomEnd)
                                 .clip(CircleShape)
                                 .background(Amber500)
@@ -83,16 +89,15 @@ fun AppHeader(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                text = "Mahmoud English",
+                                text = "محمود إنجلش",
                                 fontSize = 17.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.Serif,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = Emerald100,
-                                modifier = Modifier.padding(horizontal = 2.dp)
+                                shape = RoundedCornerShape(10.dp),
+                                color = Emerald100
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -115,102 +120,149 @@ fun AppHeader(
                             }
                         }
                         Text(
-                            text = "ترجمة بالكاميرا • قاموس ناطق • دروس واختبارات",
+                            text = "الترجمة بالكاميرا • قاموس مصور ناطق • دروس واختبارات",
                             fontSize = 10.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
+            }
 
-                // Right: Controls
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+            // Row 2: Controls Strip (Horizontal Scrollable Pills matching screenshot)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(scrollState),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Theme Segmented Capsule [ Sun | Book | Moon ]
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    modifier = Modifier.height(34.dp)
                 ) {
-                    // Voice Assist Toggle
-                    IconButton(
-                        onClick = onToggleVoiceAssist,
-                        modifier = Modifier
-                            .size(34.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(
-                                if (isVoiceAssistActive) Emerald800 else MaterialTheme.colorScheme.surfaceVariant
-                            )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        Icon(
-                            imageVector = if (isVoiceAssistActive) Icons.Default.VolumeUp else Icons.Default.VolumeOff,
-                            contentDescription = "الوضع الصوتي",
-                            tint = if (isVoiceAssistActive) Color.White else Stone500,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-
-                    // Streak Badge
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = Amber100,
-                        modifier = Modifier.height(30.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        IconButton(
+                            onClick = { onThemeChange(ThemeStyle.SAGE_CREAM) },
+                            modifier = Modifier.size(28.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.AutoAwesome,
-                                contentDescription = "Streak",
-                                tint = Amber800,
-                                modifier = Modifier.size(14.dp)
+                                imageVector = Icons.Default.WbSunny,
+                                contentDescription = "نهاري",
+                                tint = if (theme == ThemeStyle.SAGE_CREAM) Emerald800 else Stone400,
+                                modifier = Modifier.size(16.dp)
                             )
-                            Text(
-                                text = "${progress.streakDays} يوم",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Amber900
+                        }
+                        IconButton(
+                            onClick = { onThemeChange(ThemeStyle.WARM_PARCHMENT) },
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.MenuBook,
+                                contentDescription = "ورقي",
+                                tint = if (theme == ThemeStyle.WARM_PARCHMENT) Emerald800 else Stone400,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                        IconButton(
+                            onClick = { onThemeChange(ThemeStyle.NIGHT_FOREST) },
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.DarkMode,
+                                contentDescription = "ليلي",
+                                tint = if (theme == ThemeStyle.NIGHT_FOREST) Emerald800 else Stone400,
+                                modifier = Modifier.size(16.dp)
                             )
                         }
                     }
+                }
 
-                    // Theme Selector Dropdown / Cycle
-                    IconButton(
-                        onClick = {
-                            val nextTheme = when (theme) {
-                                ThemeStyle.SAGE_CREAM -> ThemeStyle.WARM_PARCHMENT
-                                ThemeStyle.WARM_PARCHMENT -> ThemeStyle.NIGHT_FOREST
-                                ThemeStyle.NIGHT_FOREST -> ThemeStyle.SAGE_CREAM
-                            }
-                            onThemeChange(nextTheme)
-                        },
-                        modifier = Modifier
-                            .size(34.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                // Voice Assist Pill (Emerald)
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (isVoiceAssistActive) Color(0xFF059669) else MaterialTheme.colorScheme.surfaceVariant,
+                    modifier = Modifier
+                        .height(34.dp)
+                        .clickable { onToggleVoiceAssist() }
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Icon(
-                            imageVector = when (theme) {
-                                ThemeStyle.SAGE_CREAM -> Icons.Default.WbSunny
-                                ThemeStyle.WARM_PARCHMENT -> Icons.Default.MenuBook
-                                ThemeStyle.NIGHT_FOREST -> Icons.Default.DarkMode
-                            },
-                            contentDescription = "تغيير المظهر",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(18.dp)
+                            imageVector = if (isVoiceAssistActive) Icons.Default.VolumeUp else Icons.Default.VolumeOff,
+                            contentDescription = null,
+                            tint = if (isVoiceAssistActive) Color.White else Stone500,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = if (isVoiceAssistActive) "صوت" else "صامت",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isVoiceAssistActive) Color.White else Stone600
                         )
                     }
+                }
 
-                    // Memory / Backup Button
-                    IconButton(
-                        onClick = onOpenMemoryModal,
-                        modifier = Modifier
-                            .size(34.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                // Streak Badge (Amber)
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFFFEF3C7),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFDE68A)),
+                    modifier = Modifier.height(34.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Storage,
-                            contentDescription = "الذاكرة",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(18.dp)
+                            imageVector = Icons.Default.LocalFireDepartment,
+                            contentDescription = "Streak",
+                            tint = Color(0xFFD97706),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "${progress.streakDays} يوم",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF92400E)
+                        )
+                    }
+                }
+
+                // Language switcher / Memory pill
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFFEFF6FF),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBFDBFE)),
+                    modifier = Modifier
+                        .height(34.dp)
+                        .clickable { onOpenMemoryModal() }
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Translate,
+                            contentDescription = null,
+                            tint = Color(0xFF2563EB),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "English",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1E40AF)
                         )
                     }
                 }

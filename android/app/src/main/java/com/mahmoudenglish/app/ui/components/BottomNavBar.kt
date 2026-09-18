@@ -30,12 +30,11 @@ fun BottomNavBar(
     onTabSelected: (String) -> Unit
 ) {
     val tabs = listOf(
-        NavTabItem("camera", "الكاميرا", Icons.Default.CameraAlt),
+        NavTabItem("home", "الرئيسية", Icons.Default.Home),
         NavTabItem("vocab", "الكلمات", Icons.Default.MenuBook),
-        NavTabItem("chat", "شات ذكي", Icons.Default.ChatBubbleOutline),
         NavTabItem("lessons", "الدروس", Icons.Default.School),
-        NavTabItem("game", "التحدي", Icons.Default.SportsEsports),
-        NavTabItem("tips", "نصائح", Icons.Default.Lightbulb)
+        NavTabItem("chat", "شات ذكي", Icons.Default.ChatBubbleOutline),
+        NavTabItem("contact", "تواصل", Icons.Default.Phone)
     )
 
     Surface(

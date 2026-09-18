@@ -80,6 +80,18 @@ class MainActivity : ComponentActivity() {
                                 label = "ScreenTransition"
                             ) { targetScreen ->
                                 when (targetScreen) {
+                                    "home" -> HomeScreen(
+                                        progress = progress,
+                                        totalWords = vocabulary.size,
+                                        featuredWord = vocabulary.firstOrNull(),
+                                        onNavigate = { viewModel.selectTab(it) },
+                                        tts = viewModel.tts
+                                    )
+                                    "islamic" -> IslamicCornerScreen(
+                                        tts = viewModel.tts,
+                                        onBack = { viewModel.selectTab("home") }
+                                    )
+                                    "contact" -> ContactScreen()
                                     "camera" -> CameraTranslatorScreen(
                                         scanResult = currentScan,
                                         isScanning = isScanning,

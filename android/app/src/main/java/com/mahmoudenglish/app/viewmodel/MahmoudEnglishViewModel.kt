@@ -17,7 +17,7 @@ class MahmoudEnglishViewModel(application: Application) : AndroidViewModel(appli
 
     val tts = TextToSpeechHelper(application)
 
-    private val _currentTab = MutableStateFlow("camera")
+    private val _currentTab = MutableStateFlow("home")
     val currentTab: StateFlow<String> = _currentTab.asStateFlow()
 
     private val _theme = MutableStateFlow(ThemeStyle.SAGE_CREAM)
