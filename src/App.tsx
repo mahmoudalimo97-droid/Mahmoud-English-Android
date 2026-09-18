@@ -316,6 +316,18 @@ export const App: React.FC = () => {
     [t, savedWords.length]
   );
 
+  // Mobile Bottom Navigation Bar Items (Home, Words, Quiz, Chat, Contact)
+  const mobileNavItems = useMemo(
+    () => [
+      { id: 'home' as NavTab, label: language === 'ar' ? 'الرئيسية' : 'Home', icon: Home },
+      { id: 'vocab' as NavTab, label: language === 'ar' ? 'الكلمات' : 'Words', icon: Volume2 },
+      { id: 'quiz' as NavTab, label: language === 'ar' ? 'الاختبارات' : 'Quiz', icon: HelpCircle },
+      { id: 'chat' as NavTab, label: language === 'ar' ? 'الشات' : 'Chat', icon: MessageSquare },
+      { id: 'contact' as NavTab, label: language === 'ar' ? 'تواصل' : 'Contact', icon: Phone },
+    ],
+    [language]
+  );
+
   // Theme styling wrapper
   const themeClasses = useMemo(() => {
     switch (theme) {
@@ -368,10 +380,10 @@ export const App: React.FC = () => {
         onToggleVoiceAssist={handleToggleVoiceAssist}
       />
 
-      {/* Main Tab Navigation Bar */}
-      <nav className={`sticky top-[57px] sm:top-[61px] z-20 backdrop-blur-md border-b ${themeClasses.navBg} transition-all`}>
-        <div className="max-w-6xl mx-auto px-2 sm:px-4 py-2">
-          <div className="flex items-center justify-start sm:justify-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5">
+      {/* Main Tab Navigation Bar - Desktop / Tablet (Hidden on mobile to avoid duplication with bottom nav) */}
+      <nav className={`hidden md:block sticky top-[57px] sm:top-[61px] z-20 backdrop-blur-md border-b ${themeClasses.navBg} transition-all`}>
+        <div className="max-w-6xl mx-auto px-2 sm:px-4 py-1.5 sm:py-2">
+          <div className="flex items-center justify-start sm:justify-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5 snap-x snap-mandatory scroll-smooth">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -383,7 +395,7 @@ export const App: React.FC = () => {
                     setActiveTab(tab.id);
                     speakTabTransition(tab.label, language as 'ar' | 'en');
                   }}
-                  className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 active:scale-95 ${
+                  className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 snap-center active:scale-95 ${
                     isActive ? themeClasses.activeTab : themeClasses.inactiveTab
                   }`}
                 >
@@ -408,9 +420,9 @@ export const App: React.FC = () => {
       </nav>
 
       {/* Main Content Area (Optional Phone Bezel Simulation) */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-4 sm:py-6 pb-24 md:pb-8">
         {/* High-Graphic Master Studio Hero Banner */}
-        <div className="mb-5 sm:mb-6 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 text-white p-4 sm:p-6 border border-indigo-500/25 shadow-xl shadow-indigo-950/20 relative overflow-hidden">
+        <div className="mb-5 sm:mb-6 rounded-2xl md:rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 text-white p-4 sm:p-6 border border-indigo-500/25 shadow-xl shadow-indigo-950/20 relative overflow-hidden">
           {/* Ambient luminous glow circles */}
           <div className="absolute top-0 end-0 w-72 h-72 bg-teal-500/15 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16"></div>
           <div className="absolute bottom-0 start-0 w-72 h-72 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none -ml-16 -mb-16"></div>
@@ -428,7 +440,7 @@ export const App: React.FC = () => {
                 </span>
               </div>
 
-              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white font-serif flex items-center gap-2">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-white font-serif flex items-center gap-2">
                 <span>{language === 'ar' ? 'أكاديمية مستر محمود علي للإنجليزية' : 'Mr. Mahmoud Ali English Academy'}</span>
               </h2>
 
@@ -601,6 +613,47 @@ export const App: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Fixed Bottom Navigation Bar on Mobile (Home, Words, Quiz, Chat, Contact) */}
+      <nav
+        aria-label="Mobile Bottom Navigation"
+        className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200/90 dark:border-slate-800 shadow-2xl px-1 pt-1.5 pb-[max(env(safe-area-inset-bottom,0px),0.5rem)] flex items-center justify-around"
+      >
+        {mobileNavItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              id={`mobile-bottom-nav-${item.id}`}
+              onClick={() => {
+                playUiSound('tap');
+                setActiveTab(item.id);
+                speakTabTransition(item.label, language as 'ar' | 'en');
+              }}
+              className={`min-w-[60px] min-h-[48px] px-2 py-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all active:scale-95 relative cursor-pointer ${
+                isActive
+                  ? 'text-teal-700 dark:text-teal-300 font-bold'
+                  : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 font-medium'
+              }`}
+            >
+              {isActive && (
+                <span className="absolute top-0 w-8 h-1 rounded-full bg-teal-600 dark:bg-teal-400" />
+              )}
+              <Icon
+                className={`w-5 h-5 ${
+                  isActive
+                    ? 'scale-110 text-teal-600 dark:text-teal-400'
+                    : 'text-slate-500 dark:text-slate-400'
+                } transition-transform`}
+              />
+              <span className="text-xs leading-none whitespace-nowrap mt-0.5">
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
+      </nav>
 
       {/* Offline Indicator */}
       <OfflineIndicator />

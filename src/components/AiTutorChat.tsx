@@ -36,6 +36,7 @@ export const AiTutorChat: React.FC<AiTutorChatProps> = ({
   const { language, t } = useLanguage();
   const [inputText, setInputText] = useState('');
   const [isListening, setIsListening] = useState(false);
+  const [speechNotice, setSpeechNotice] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const scrollToBottom = () => {
@@ -67,11 +68,12 @@ export const AiTutorChat: React.FC<AiTutorChatProps> = ({
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      alert(
+      setSpeechNotice(
         language === 'ar'
-          ? 'المتصفح الحالي لا يدعم التعرف الصوتي المباشر. يمكنك الكتابة مباشرة في المربع.'
-          : 'Speech recognition is not supported in this browser. You can type directly in the box.'
+          ? 'التعرف الصوتي المباشر غير متاح على هذا المتصفح/الجهاز. يمكنك كتابة رسالتك في المربع مباشرة.'
+          : 'Speech recognition is not supported on this device. You can type directly in the box.'
       );
+      setTimeout(() => setSpeechNotice(null), 5000);
       return;
     }
 
@@ -310,6 +312,20 @@ export const AiTutorChat: React.FC<AiTutorChatProps> = ({
 
         <div ref={messagesEndRef} />
       </div>
+
+      {/* In-app Notice Banner (Replaces browser alert for WebView compatibility) */}
+      {speechNotice && (
+        <div className="mx-3 my-1.5 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-2 shadow-xs">
+          <span>{speechNotice}</span>
+          <button
+            type="button"
+            onClick={() => setSpeechNotice(null)}
+            className="p-1 rounded-lg text-amber-700 hover:bg-amber-100 font-bold"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Input Bar */}
       <form

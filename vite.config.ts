@@ -6,6 +6,13 @@ import {VitePWA} from 'vite-plugin-pwa';
 
 export default defineConfig(() => {
   return {
+    base: './',
+    define: {
+      'process.env.GEMINI_API_KEY': JSON.stringify(process.env.GEMINI_API_KEY || ''),
+    },
+    build: {
+      outDir: 'dist',
+    },
     plugins: [
       react(),
       tailwindcss(),
@@ -13,32 +20,32 @@ export default defineConfig(() => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.svg'],
         manifest: {
-          id: '/',
+          id: './',
           name: 'Mahmoud English',
           short_name: 'MahmoudEng',
           description: 'تطبيق ترجمة بالكاميرا وتعلم الإنجليزية بالذكاء الاصطناعي مع قاموس ناطق ودروس واختبارات ولعبة تعليمية',
           theme_color: '#064E3B',
           background_color: '#F6F7F3',
           display: 'standalone',
-          start_url: '/',
-          scope: '/',
+          start_url: './',
+          scope: './',
           dir: 'rtl',
           lang: 'ar',
           icons: [
             {
-              src: '/pwa-192x192.png',
+              src: 'pwa-192x192.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/pwa-512x512.png',
+              src: 'pwa-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/pwa-maskable-512x512.png',
+              src: 'pwa-maskable-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable',

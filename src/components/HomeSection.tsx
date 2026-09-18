@@ -124,28 +124,56 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
   return (
     <div className="space-y-6">
       {/* Visual Hero Welcome Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-emerald-950 text-white p-6 sm:p-8 border border-emerald-500/20 shadow-xl shadow-slate-950/20">
+      <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-emerald-950 text-white p-4 sm:p-6 md:p-8 border border-emerald-500/20 shadow-xl shadow-slate-950/20 w-full">
         <div className="absolute top-0 end-0 w-80 h-80 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16"></div>
         <div className="absolute bottom-0 start-0 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none -ml-16 -mb-16"></div>
 
-        <div className="relative z-10 space-y-4">
+        <div className="relative z-10 space-y-3.5 sm:space-y-4">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">
+            <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-xs font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">
               <Sparkles className="w-3.5 h-3.5" />
               <span>{isAr ? 'منظومة تعليمية متكاملة' : 'Complete Learning Ecosystem'}</span>
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">
+            <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-xs font-bold bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">
               <Moon className="w-3.5 h-3.5" />
               <span>{isAr ? 'مدعوم بالركن الإسلامي' : 'Islamic Corner Added'}</span>
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-teal-400/20 text-teal-300 border border-teal-400/30">
+            <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-xs font-bold bg-teal-400/20 text-teal-300 border border-teal-400/30">
               <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
               <span>{isAr ? 'نطق صوتي تفاعلي دقيق' : 'Interactive Clear Audio'}</span>
             </span>
           </div>
 
-          <div className="max-w-2xl space-y-2">
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-serif">
+          {/* Stats box stretched to full width above the title with equal columns */}
+          <div className="w-full grid grid-cols-3 gap-1.5 sm:gap-2 p-2.5 sm:p-3 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-center">
+            <div className="flex flex-col items-center justify-center py-0.5">
+              <span className="text-[10px] sm:text-xs text-emerald-200/90 font-medium whitespace-nowrap">
+                {isAr ? 'بنك الكلمات' : 'Vocab'}
+              </span>
+              <span className="text-sm sm:text-base font-bold text-white whitespace-nowrap">
+                {totalWords} {isAr ? 'كلمة' : 'Words'}
+              </span>
+            </div>
+            <div className="flex flex-col items-center justify-center py-0.5 border-x border-white/15">
+              <span className="text-[10px] sm:text-xs text-amber-200/90 font-medium whitespace-nowrap">
+                {isAr ? 'أيام الالتزام' : 'Streak'}
+              </span>
+              <span className="text-sm sm:text-base font-bold text-amber-300 whitespace-nowrap">
+                {progress.streakDays} {isAr ? 'يوم' : 'Days'}
+              </span>
+            </div>
+            <div className="flex flex-col items-center justify-center py-0.5">
+              <span className="text-[10px] sm:text-xs text-cyan-200/90 font-medium whitespace-nowrap">
+                {isAr ? 'نقاط اللعبة' : 'Game Score'}
+              </span>
+              <span className="text-sm sm:text-base font-bold text-white whitespace-nowrap">
+                {progress.gameHighScore} {isAr ? 'نقطة' : 'Pts'}
+              </span>
+            </div>
+          </div>
+
+          <div className="max-w-2xl space-y-1.5 sm:space-y-2">
+            <h1 className="text-2xl sm:text-[28px] md:text-3xl font-extrabold tracking-tight font-serif">
               {isAr ? 'مرحباً بك في محمود إنجلش' : 'Welcome to Mahmoud English'}
             </h1>
             <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
@@ -155,18 +183,18 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
             </p>
           </div>
 
-          {/* Quick CTA row */}
-          <div className="pt-2 flex flex-wrap items-center gap-3">
+          {/* Quick CTA Buttons: 2-column grid on mobile with main green button spanning full width on top */}
+          <div className="pt-2 grid grid-cols-2 gap-2.5 sm:gap-3 md:flex md:flex-wrap md:items-center">
             <button
               onClick={() => {
                 playUiSound('tap');
                 onNavigateTab('islamic');
               }}
-              className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center gap-2"
+              className="col-span-2 md:col-span-1 min-h-[48px] px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
             >
-              <Moon className="w-4 h-4 text-amber-300" />
+              <Moon className="w-4 h-4 text-amber-300 shrink-0" />
               <span>{isAr ? 'الركن الإسلامي الإنجليزي' : 'Islamic Corner'}</span>
-              {isAr ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+              {isAr ? <ArrowLeft className="w-4 h-4 shrink-0" /> : <ArrowRight className="w-4 h-4 shrink-0" />}
             </button>
 
             <button
@@ -174,9 +202,9 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
                 playUiSound('tap');
                 onNavigateTab('lessons');
               }}
-              className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold text-xs sm:text-sm backdrop-blur-md transition-all active:scale-95 flex items-center gap-2"
+              className="col-span-1 min-h-[48px] px-3.5 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold text-xs sm:text-sm backdrop-blur-md transition-all active:scale-95 flex items-center justify-center gap-2"
             >
-              <BookOpen className="w-4 h-4 text-teal-300" />
+              <BookOpen className="w-4 h-4 text-teal-300 shrink-0" />
               <span>{isAr ? 'الدروس والشروحات' : 'Lessons'}</span>
             </button>
 
@@ -185,10 +213,10 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
                 playUiSound('tap');
                 onNavigateTab('vocab');
               }}
-              className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold text-xs sm:text-sm backdrop-blur-md transition-all active:scale-95 flex items-center gap-2"
+              className="col-span-1 min-h-[48px] px-3.5 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold text-xs sm:text-sm backdrop-blur-md transition-all active:scale-95 flex items-center justify-center gap-2"
             >
-              <Volume2 className="w-4 h-4 text-amber-300" />
-              <span>{isAr ? 'الكلمات بالصور' : 'Visual Vocab'}</span>
+              <Volume2 className="w-4 h-4 text-amber-300 shrink-0" />
+              <span>{isAr ? 'الكلمات بالصوت' : 'Audio Vocab'}</span>
             </button>
 
             <button
@@ -196,10 +224,10 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
                 playUiSound('tap');
                 onNavigateTab('contact');
               }}
-              className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold text-xs sm:text-sm backdrop-blur-md transition-all active:scale-95 flex items-center gap-2"
+              className="col-span-2 md:col-span-1 min-h-[48px] px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold text-xs sm:text-sm backdrop-blur-md transition-all active:scale-95 flex items-center justify-center gap-2"
             >
-              <Phone className="w-4 h-4 text-cyan-300" />
-              <span>{isAr ? 'تواصل مع أ / محمود' : 'Contact Mr. Mahmoud'}</span>
+              <Phone className="w-4 h-4 text-cyan-300 shrink-0" />
+              <span>{isAr ? 'تواصل مع مستر محمود' : 'Contact Mr. Mahmoud'}</span>
             </button>
           </div>
         </div>
