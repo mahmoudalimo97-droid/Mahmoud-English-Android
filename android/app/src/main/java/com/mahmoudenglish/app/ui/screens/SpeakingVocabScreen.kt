@@ -198,7 +198,7 @@ fun SpeakingVocabScreen(
                                     )
                                 }
 
-                                Column(horizontalAlignment = Alignment.CenterVertically) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(
                                         text = currentWord.english,
                                         fontSize = 28.sp,
@@ -238,7 +238,7 @@ fun SpeakingVocabScreen(
                                 }
 
                                 Column(
-                                    horizontalAlignment = Alignment.CenterVertically,
+                                    horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     Text(

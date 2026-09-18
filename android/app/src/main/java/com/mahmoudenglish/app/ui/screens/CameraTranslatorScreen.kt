@@ -66,7 +66,7 @@ fun CameraTranslatorScreen(
                             )
                         } else {
                             Column(
-                                horizontalAlignment = Alignment.CenterVertically,
+                                horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Icon(
@@ -91,7 +91,7 @@ fun CameraTranslatorScreen(
                                     .background(Color.Black.copy(alpha = 0.6f)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Column(horizontalAlignment = Alignment.CenterVertically) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     CircularProgressIndicator(color = Emerald500)
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(

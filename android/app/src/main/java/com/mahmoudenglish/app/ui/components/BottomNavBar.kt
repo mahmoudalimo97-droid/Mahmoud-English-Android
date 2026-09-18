@@ -55,7 +55,7 @@ fun BottomNavBar(
             tabs.forEach { tab ->
                 val isSelected = currentTab == tab.id
                 Column(
-                    horizontalAlignment = Alignment.CenterVertically,
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
                         .clickable { onTabSelected(tab.id) }
