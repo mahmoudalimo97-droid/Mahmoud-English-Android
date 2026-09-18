@@ -198,11 +198,11 @@ export function speakEnglish(text: string, rate: number = 0.88): Promise<void> {
         if (MALE_EN_KEYWORDS.some((kw) => voiceNameLower.includes(kw))) {
           utterance.pitch = 0.82; // Deep dignified male teacher pitch
         } else {
-          utterance.pitch = 0.70; // Force deep masculine formant on neutral/system voices
+          utterance.pitch = 0.55; // Transform neutral/system voices to deep baritone male
         }
       } else {
         // Fallback default: deep pitch ensures masculine tone
-        utterance.pitch = 0.68;
+        utterance.pitch = 0.55;
       }
 
       utterance.onend = () => resolve();
@@ -261,10 +261,10 @@ export function speakArabic(text: string, rate: number = 0.90): Promise<void> {
         if (MALE_AR_KEYWORDS.some((kw) => voiceNameLower.includes(kw))) {
           utterance.pitch = 0.82;
         } else {
-          utterance.pitch = 0.70; // Deep masculine pitch
+          utterance.pitch = 0.55; // Deep masculine pitch
         }
       } else {
-        utterance.pitch = 0.70;
+        utterance.pitch = 0.55;
       }
 
       utterance.onend = () => resolve();

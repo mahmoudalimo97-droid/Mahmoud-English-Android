@@ -1,23 +1,36 @@
 package com.mahmoudenglish.app.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
 import com.mahmoudenglish.app.model.DetectedObject
 import com.mahmoudenglish.app.model.ScanResult
@@ -33,6 +46,27 @@ fun CameraTranslatorScreen(
     onSaveWord: (VocabWord) -> Unit,
     tts: TextToSpeechHelper
 ) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasCameraPermission = isGranted
+        if (isGranted) {
+            tts.speakArabic("تم تفعيل الكاميرا بنجاح")
+        }
+    }
+
+    var lensFacing by remember { mutableIntStateOf(CameraSelector.LENS_FACING_BACK) }
+    var isLivePreviewActive by remember { mutableStateOf(true) }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -52,18 +86,170 @@ fun CameraTranslatorScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp)
+                            .height(240.dp)
                             .clip(RoundedCornerShape(20.dp))
                             .background(Color.Black),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (scanResult != null && scanResult.imageUrl.isNotBlank()) {
+                        if (hasCameraPermission && isLivePreviewActive) {
+                            // Live CameraX Preview
+                            AndroidView(
+                                factory = { ctx ->
+                                    val previewView = PreviewView(ctx)
+                                    val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
+                                    cameraProviderFuture.addListener({
+                                        try {
+                                            val cameraProvider = cameraProviderFuture.get()
+                                            val preview = Preview.Builder().build().also {
+                                                it.surfaceProvider = previewView.surfaceProvider
+                                            }
+                                            val cameraSelector = CameraSelector.Builder()
+                                                .requireLensFacing(lensFacing)
+                                                .build()
+
+                                            cameraProvider.unbindAll()
+                                            cameraProvider.bindToLifecycle(
+                                                lifecycleOwner,
+                                                cameraSelector,
+                                                preview
+                                            )
+                                        } catch (e: Exception) {
+                                            // Handle exception gracefully
+                                        }
+                                    }, ContextCompat.getMainExecutor(ctx))
+                                    previewView
+                                },
+                                update = { previewView ->
+                                    val cameraProviderFuture = ProcessCameraProvider.getInstance(previewView.context)
+                                    cameraProviderFuture.addListener({
+                                        try {
+                                            val cameraProvider = cameraProviderFuture.get()
+                                            val preview = Preview.Builder().build().also {
+                                                it.surfaceProvider = previewView.surfaceProvider
+                                            }
+                                            val cameraSelector = CameraSelector.Builder()
+                                                .requireLensFacing(lensFacing)
+                                                .build()
+
+                                            cameraProvider.unbindAll()
+                                            cameraProvider.bindToLifecycle(
+                                                lifecycleOwner,
+                                                cameraSelector,
+                                                preview
+                                            )
+                                        } catch (e: Exception) {
+                                            // Handle exception gracefully
+                                        }
+                                    }, ContextCompat.getMainExecutor(previewView.context))
+                                },
+                                modifier = Modifier.fillMaxSize()
+                            )
+
+                            // Overlay: Camera Active Badge & Lens Switcher
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .align(Alignment.TopCenter)
+                                    .padding(12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Surface(
+                                    color = Color.Black.copy(alpha = 0.6f),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(8.dp)
+                                                .clip(CircleShape)
+                                                .background(Color(0xFF22C55E))
+                                        )
+                                        Text(
+                                            text = "الكاميرا الحية تعمل",
+                                            color = Color.White,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+
+                                IconButton(
+                                    onClick = {
+                                        lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
+                                            CameraSelector.LENS_FACING_FRONT
+                                        } else {
+                                            CameraSelector.LENS_FACING_BACK
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.Black.copy(alpha = 0.6f))
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Cameraswitch,
+                                        contentDescription = "Switch Camera",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        } else if (!hasCameraPermission) {
+                            // Permission Request View
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(10.dp),
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CameraAlt,
+                                    contentDescription = null,
+                                    tint = Color.White.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(48.dp)
+                                )
+                                Text(
+                                    text = "تطبيق مستر محمود بحاجة للوصول إلى الكاميرا للترجمة الحية",
+                                    color = Color.White,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Button(
+                                    onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Emerald800),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(imageVector = Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(text = "السماح بتشغيل الكاميرا", fontSize = 12.sp)
+                                }
+                            }
+                        } else if (scanResult != null && scanResult.imageUrl.isNotBlank()) {
+                            // Captured Snapshot View
                             AsyncImage(
                                 model = scanResult.imageUrl,
                                 contentDescription = "Captured view",
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier.fillMaxSize()
                             )
+
+                            // Switch back to live view button
+                            Button(
+                                onClick = { isLivePreviewActive = true },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.Black.copy(alpha = 0.75f)),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .padding(bottom = 12.dp)
+                            ) {
+                                Icon(imageVector = Icons.Default.Videocam, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(text = "العودة للكاميرا الحية", color = Color.White, fontSize = 12.sp)
+                            }
                         } else {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -88,14 +274,14 @@ fun CameraTranslatorScreen(
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .background(Color.Black.copy(alpha = 0.6f)),
+                                    .background(Color.Black.copy(alpha = 0.65f)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     CircularProgressIndicator(color = Emerald500)
-                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Spacer(modifier = Modifier.height(10.dp))
                                     Text(
-                                        text = "جاري مسح وتحليل الصورة...",
+                                        text = "جاري مسح وتحليل الصورة والتعرف على العناصر...",
                                         color = Color.White,
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold
@@ -107,18 +293,26 @@ fun CameraTranslatorScreen(
 
                     // Capture Trigger Button
                     Button(
-                        onClick = onCaptureClick,
+                        onClick = {
+                            if (!hasCameraPermission) {
+                                permissionLauncher.launch(Manifest.permission.CAMERA)
+                            } else {
+                                isLivePreviewActive = false
+                                tts.playUiSound("chime")
+                                onCaptureClick()
+                            }
+                        },
                         enabled = !isScanning,
                         colors = ButtonDefaults.buttonColors(containerColor = Emerald800),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(48.dp)
+                            .height(50.dp)
                     ) {
                         Icon(imageVector = Icons.Default.Camera, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = if (isScanning) "جاري المعالجة..." else "التقاط صورة للترجمة الفورية",
+                            text = if (isScanning) "جاري المعالجة والتحليل..." else "التقاط صورة للترجمة الفورية المباشرة 📸",
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
                         )

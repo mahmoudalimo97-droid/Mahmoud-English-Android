@@ -4,7 +4,7 @@ import android.content.Context
 import android.media.AudioManager
 import android.media.ToneGenerator
 import android.speech.tts.TextToSpeech
-import android.speech.tts.UtteranceProgressListener
+import android.speech.tts.Voice
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -27,104 +27,149 @@ class TextToSpeechHelper(private val context: Context) : TextToSpeech.OnInitList
         }
     }
 
-    companion object {
-        private val FEMALE_KEYWORDS = listOf(
-            "female", "woman", "girl", "zira", "samantha", "victoria", "karen",
-            "hazel", "laila", "salma", "hoda", "zehra", "mariam", "fatima", "nour",
-            "sfg-local", "sfg_1", "tpd-local", "iom-local", "arz-local", "ar-eg-female"
-        )
-
-        private val MALE_KEYWORDS = listOf(
-            "male", "#male", "guy", "david", "george", "mark", "daniel", "alex",
-            "brian", "james", "paul", "ryan", "shakir", "hamed", "tarik", "tariq",
-            "naayf", "maged", "iol#male", "iob#male", "sfg#male", "tpd#male",
-            "rjs#male", "gba#male", "aub#male", "arc#male"
-        )
-    }
-
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
             isInitialized = true
             tts?.language = Locale.US
-            tts?.setSpeechRate(0.88f)
-            // Masculine pitch tuning (0.75f) for Mr. Mahmoud Ali
-            tts?.setPitch(0.75f)
-            selectMaleVoice("en")
+            tts?.setSpeechRate(0.86f)
+            tts?.setPitch(0.55f)
         }
     }
 
-    private fun selectMaleVoice(langCode: String) {
-        try {
-            val voices = tts?.voices
-            if (!voices.isNullOrEmpty()) {
-                val isStrictlyNotFemale = { vName: String ->
-                    val lower = vName.lowercase()
-                    !FEMALE_KEYWORDS.any { kw -> lower.contains(kw) }
-                }
-
-                // 1. First priority: explicitly tagged male voice
-                var targetVoice = voices.firstOrNull { voice ->
-                    val vName = voice.name.lowercase()
-                    voice.locale.language.startsWith(langCode) &&
-                    isStrictlyNotFemale(vName) &&
-                    MALE_KEYWORDS.any { kw -> vName.contains(kw) }
-                }
-
-                // 2. Second priority: any voice with "male" in its name
-                if (targetVoice == null) {
-                    targetVoice = voices.firstOrNull { voice ->
-                        voice.locale.language.startsWith(langCode) &&
-                        voice.name.lowercase().contains("male") &&
-                        !voice.name.lowercase().contains("female")
-                    }
-                }
-
-                // 3. Third priority: non-female voice
-                if (targetVoice == null) {
-                    targetVoice = voices.firstOrNull { voice ->
-                        voice.locale.language.startsWith(langCode) &&
-                        isStrictlyNotFemale(voice.name)
-                    }
-                }
-
-                if (targetVoice != null) {
-                    tts?.voice = targetVoice
-                    val isExplicitMale = MALE_KEYWORDS.any { kw -> targetVoice.name.lowercase().contains(kw) }
-                    if (isExplicitMale) {
-                        tts?.setPitch(0.80f)
-                    } else {
-                        tts?.setPitch(0.68f) // Deep masculine pitch transformation
-                    }
-                } else {
-                    // Fallback to deep pitch so even default engine sounds male
-                    tts?.setPitch(0.68f)
-                }
-            } else {
-                tts?.setPitch(0.68f)
+    /**
+     * Finds the best voice for a language, prioritizing local male voices.
+     * Returns a Pair of (selectedVoice, isExplicitlyMale).
+     */
+    private fun findBestVoice(langPrefix: String): Pair<Voice?, Boolean> {
+        return try {
+            val allVoices = tts?.voices
+            if (allVoices.isNullOrEmpty()) {
+                return Pair(null, false)
             }
+
+            val langVoices = allVoices.filter {
+                it.locale.language.startsWith(langPrefix, ignoreCase = true) ||
+                it.locale.toLanguageTag().startsWith(langPrefix, ignoreCase = true)
+            }
+
+            if (langVoices.isEmpty()) {
+                return Pair(null, false)
+            }
+
+            val isVoiceFemale = { v: Voice ->
+                val name = v.name.lowercase()
+                name.contains("female") || name.contains("woman") || name.contains("girl") ||
+                name.contains("zira") || name.contains("samantha") || name.contains("victoria") ||
+                name.contains("karen") || name.contains("hazel") || name.contains("laila") ||
+                name.contains("salma") || name.contains("hoda") || name.contains("zehra") ||
+                name.contains("mariam") || name.contains("fatima") || name.contains("nour") ||
+                name.contains("-f0") || name.contains("_fem") || name.contains("#female")
+            }
+
+            val isVoiceMale = { v: Voice ->
+                val name = v.name.lowercase()
+                !isVoiceFemale(v) && (
+                    name.contains("#male") || name.contains("-male") || name.contains("_male") ||
+                    name.contains(" male") || name.contains("male-") || name.contains("male_") ||
+                    name.contains("david") || name.contains("george") || name.contains("mark") ||
+                    name.contains("daniel") || name.contains("alex") || name.contains("guy") ||
+                    name.contains("brian") || name.contains("james") || name.contains("paul") ||
+                    name.contains("ryan") || name.contains("tarik") || name.contains("tariq") ||
+                    name.contains("hamed") || name.contains("shakir") || name.contains("naayf") ||
+                    name.contains("maged") || name.contains("-m0") || name.contains("_m0") ||
+                    name.contains("m01") || name.contains("m02") || name.contains("m03") ||
+                    name.contains("m04") || name.contains("m05") || name.contains("m06")
+                )
+            }
+
+            // 1. Local (offline) voice that is explicitly tagged male
+            val localMale = langVoices.firstOrNull {
+                !it.isNetworkConnectionRequired &&
+                !it.features.contains(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED) &&
+                isVoiceMale(it)
+            }
+            if (localMale != null) return Pair(localMale, true)
+
+            // 2. Any voice that is explicitly male
+            val anyMale = langVoices.firstOrNull { isVoiceMale(it) }
+            if (anyMale != null) return Pair(anyMale, true)
+
+            // 3. Local voice that is NOT female
+            val localNonFemale = langVoices.firstOrNull {
+                !it.isNetworkConnectionRequired &&
+                !it.features.contains(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED) &&
+                !isVoiceFemale(it)
+            }
+            if (localNonFemale != null) return Pair(localNonFemale, false)
+
+            // 4. Any voice that is NOT female
+            val anyNonFemale = langVoices.firstOrNull { !isVoiceFemale(it) }
+            if (anyNonFemale != null) return Pair(anyNonFemale, false)
+
+            // 5. Fallback to any local voice
+            val anyLocal = langVoices.firstOrNull {
+                !it.isNetworkConnectionRequired &&
+                !it.features.contains(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED)
+            }
+            Pair(anyLocal ?: langVoices.first(), false)
         } catch (e: Exception) {
-            tts?.setPitch(0.68f)
+            Pair(null, false)
         }
     }
 
     fun speakEnglish(text: String) {
         if (!isInitialized || text.isBlank()) return
-        tts?.language = Locale.US
-        tts?.setSpeechRate(0.88f)
-        selectMaleVoice("en")
-        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "en_utt")
+        try {
+            val (voice, isExplicitMale) = findBestVoice("en")
+            if (voice != null) {
+                try {
+                    tts?.voice = voice
+                } catch (e: Exception) {
+                    tts?.language = Locale.US
+                }
+            } else {
+                tts?.language = Locale.US
+            }
+
+            // If an explicit male voice is found, pitch 0.82f gives a resonant masculine tone.
+            // If the voice is unconfirmed or system fallback (which is often female by default),
+            // a pitch of 0.52f lowers the vocal tract to ~110 Hz, turning it into a deep baritone male voice.
+            val pitch = if (isExplicitMale) 0.82f else 0.52f
+            tts?.setPitch(pitch)
+            tts?.setSpeechRate(0.86f)
+
+            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "en_utt_${System.currentTimeMillis()}")
+        } catch (e: Exception) {
+            // Safe fallback
+        }
     }
 
     fun speakArabic(text: String) {
         if (!isInitialized || text.isBlank()) return
-        val arLocale = Locale("ar")
-        val isArAvailable = tts?.isLanguageAvailable(arLocale)
-        if (isArAvailable != TextToSpeech.LANG_MISSING_DATA && isArAvailable != TextToSpeech.LANG_NOT_SUPPORTED) {
-            tts?.language = arLocale
-            tts?.setSpeechRate(0.90f)
-            selectMaleVoice("ar")
+        try {
+            val arLocale = Locale("ar")
+            val (voice, isExplicitMale) = findBestVoice("ar")
+            if (voice != null) {
+                try {
+                    tts?.voice = voice
+                } catch (e: Exception) {
+                    tts?.language = arLocale
+                }
+            } else {
+                val isArAvailable = tts?.isLanguageAvailable(arLocale)
+                if (isArAvailable != TextToSpeech.LANG_MISSING_DATA && isArAvailable != TextToSpeech.LANG_NOT_SUPPORTED) {
+                    tts?.language = arLocale
+                }
+            }
+
+            val pitch = if (isExplicitMale) 0.82f else 0.52f
+            tts?.setPitch(pitch)
+            tts?.setSpeechRate(0.88f)
+
+            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "ar_utt_${System.currentTimeMillis()}")
+        } catch (e: Exception) {
+            // Safe fallback
         }
-        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "ar_utt")
     }
 
     fun speakWordWithExplanation(englishWord: String, arabicMeaning: String) {

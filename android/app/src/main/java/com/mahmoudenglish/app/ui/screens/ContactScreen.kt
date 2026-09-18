@@ -183,53 +183,5 @@ fun ContactScreen() {
                 )
             }
         }
-
-        // Action: Email
-        Surface(
-            shape = RoundedCornerShape(18.dp),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 2.dp,
-            shadowElevation = 3.dp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable {
-                    val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:mahmoudalimo97@gmail.com"))
-                    context.startActivity(intent)
-                }
-        ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Email,
-                    contentDescription = null,
-                    tint = Emerald800,
-                    modifier = Modifier.size(24.dp)
-                )
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "البريد الإلكتروني",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "mahmoudalimo97@gmail.com",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                Icon(
-                    imageVector = Icons.Default.ArrowForwardIos,
-                    contentDescription = null,
-                    tint = Stone400,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
-        }
     }
 }
