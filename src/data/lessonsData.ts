@@ -25,7 +25,7 @@ export const LESSONS_DATA: Lesson[] = [
         explanationAr: 'في العربية نقول "أحب القهوة" ويفهم الفاعل ضمير مستتر (أنا). في الإنجليزية ممنوع قول "Love coffee" وحدها في الجمل الخبرية؛ يجب أن تقول: "I love coffee".',
         englishExamples: [
           { en: 'It is raining outside.', ar: 'إنها تمطر في الخارج. (وضعنا It كفاعل)' },
-          { en: 'She is a doctor.', ar: 'هي طبيبة.' },
+          { en: 'He is an engineer.', ar: 'هو مهندس.' },
         ],
       },
     ],

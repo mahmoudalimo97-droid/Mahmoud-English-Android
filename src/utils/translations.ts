@@ -30,11 +30,12 @@ export const TRANSLATIONS = {
 
     // Navigation Tabs
     tabHome: 'الرئيسية',
+    tabIslamic: 'الركن الإسلامي',
     tabLessons: 'الدروس',
     tabVocab: 'الكلمات بالصور',
     tabQuiz: 'الاختبارات التفاعلية',
     tabGame: 'اللعبة التفاعلية',
-    tabChat: 'الشات الذكي',
+    tabChat: 'الشات مع مستر محمود',
     tabContact: 'تواصل معنا',
     tabCamera: 'ترجمة الكاميرا',
     tabTips: 'نصائح وتوجيهات',
@@ -217,11 +218,12 @@ export const TRANSLATIONS = {
 
     // Navigation Tabs
     tabHome: 'Home',
+    tabIslamic: 'Islamic Corner',
     tabLessons: 'Lessons',
     tabVocab: 'Visual Vocab',
     tabQuiz: 'Quizzes',
     tabGame: 'Educational Game',
-    tabChat: 'AI Tutor Chat',
+    tabChat: 'Chat with Mr. Mahmoud',
     tabContact: 'Contact Us',
     tabCamera: 'Camera Translator',
     tabTips: 'Fluency Tips',

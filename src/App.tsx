@@ -14,6 +14,7 @@ import {
   Home,
   HelpCircle,
   Phone,
+  Moon,
 } from 'lucide-react';
 import {
   ThemeStyle,
@@ -32,6 +33,7 @@ import { usePWAInstall } from './hooks/usePWAInstall';
 // Components
 import { Header } from './components/Header';
 import { HomeSection } from './components/HomeSection';
+import { IslamicCornerSection } from './components/IslamicCornerSection';
 import { LessonsSection } from './components/LessonsSection';
 import { QuizzesSection } from './components/QuizzesSection';
 import { InteractiveGameSection } from './components/InteractiveGameSection';
@@ -49,7 +51,7 @@ import { AndroidInstallGuideModal } from './components/AndroidInstallGuideModal'
 import { ContactModal } from './components/ContactModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
 
-type NavTab = 'home' | 'lessons' | 'vocab' | 'quiz' | 'game' | 'chat' | 'contact' | 'camera' | 'tips';
+type NavTab = 'home' | 'islamic' | 'lessons' | 'vocab' | 'quiz' | 'game' | 'chat' | 'contact' | 'camera' | 'tips';
 
 export const App: React.FC = () => {
   const { language, t } = useLanguage();
@@ -301,11 +303,12 @@ export const App: React.FC = () => {
   const tabs = useMemo(
     () => [
       { id: 'home' as NavTab, label: t('tabHome'), icon: Home, badge: 'Main' },
+      { id: 'islamic' as NavTab, label: t('tabIslamic'), icon: Moon, badge: 'إسلاميات' },
       { id: 'lessons' as NavTab, label: t('tabLessons'), icon: BookOpen, badge: 'A1-B2' },
       { id: 'vocab' as NavTab, label: t('tabVocab'), icon: Volume2, badge: savedWords.length },
       { id: 'quiz' as NavTab, label: t('tabQuiz'), icon: HelpCircle, badge: 'Tests' },
       { id: 'game' as NavTab, label: t('tabGame'), icon: Gamepad2, badge: 'Play' },
-      { id: 'chat' as NavTab, label: t('tabChat'), icon: MessageSquare, badge: 'AI' },
+      { id: 'chat' as NavTab, label: t('tabChat'), icon: MessageSquare, badge: language === 'ar' ? 'مستر محمود' : 'Mr. Ali' },
       { id: 'contact' as NavTab, label: t('tabContact'), icon: Phone, badge: 'Mr. Ali' },
       { id: 'camera' as NavTab, label: t('tabCamera'), icon: Camera, badge: 'Live AI' },
       { id: 'tips' as NavTab, label: t('tabTips'), icon: Lightbulb, badge: 'Tips' },
@@ -378,11 +381,7 @@ export const App: React.FC = () => {
                   id={`tab-btn-${tab.id}`}
                   onClick={() => {
                     setActiveTab(tab.id);
-                    if (isVoiceAssistActive) {
-                      speakTabTransition(tab.label, language as 'ar' | 'en');
-                    } else {
-                      playUiSound('tap');
-                    }
+                    speakTabTransition(tab.label, language as 'ar' | 'en');
                   }}
                   className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 active:scale-95 ${
                     isActive ? themeClasses.activeTab : themeClasses.inactiveTab
@@ -477,16 +476,15 @@ export const App: React.FC = () => {
                 <HomeSection
                   onNavigateTab={(tab) => {
                     setActiveTab(tab as NavTab);
-                    if (isVoiceAssistActive) {
-                      const found = tabs.find((t) => t.id === tab);
-                      if (found) speakTabTransition(found.label, language as 'ar' | 'en');
-                    }
+                    const found = tabs.find((t) => t.id === tab);
+                    if (found) speakTabTransition(found.label, language as 'ar' | 'en');
                   }}
                   progress={progress}
                   totalWords={savedWords.length}
                   featuredWord={savedWords[0]}
                 />
               )}
+              {activeTab === 'islamic' && <IslamicCornerSection />}
               {activeTab === 'lessons' && (
                 <LessonsSection
                   completedLessons={completedLessons}
@@ -546,16 +544,15 @@ export const App: React.FC = () => {
               <HomeSection
                 onNavigateTab={(tab) => {
                   setActiveTab(tab as NavTab);
-                  if (isVoiceAssistActive) {
-                    const found = tabs.find((t) => t.id === tab);
-                    if (found) speakTabTransition(found.label, language as 'ar' | 'en');
-                  }
+                  const found = tabs.find((t) => t.id === tab);
+                  if (found) speakTabTransition(found.label, language as 'ar' | 'en');
                 }}
                 progress={progress}
                 totalWords={savedWords.length}
                 featuredWord={savedWords[0]}
               />
             )}
+            {activeTab === 'islamic' && <IslamicCornerSection />}
             {activeTab === 'lessons' && (
               <LessonsSection
                 completedLessons={completedLessons}

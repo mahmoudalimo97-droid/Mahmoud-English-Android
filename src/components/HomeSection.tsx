@@ -6,7 +6,6 @@ import {
   Trophy,
   ArrowLeft,
   ArrowRight,
-  GraduationCap,
   HelpCircle,
   Gamepad2,
   MessageSquare,
@@ -15,13 +14,26 @@ import {
   Flame,
   CheckCircle2,
   Compass,
+  Moon,
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { playUiSound, speakArabic, speakEnglish } from '../utils/speech';
+import { playUiSound, speakEnglish } from '../utils/speech';
 import { UserProgress, VocabWord } from '../types';
 
+export type AppNavTab =
+  | 'home'
+  | 'islamic'
+  | 'lessons'
+  | 'vocab'
+  | 'quiz'
+  | 'game'
+  | 'chat'
+  | 'contact'
+  | 'camera'
+  | 'tips';
+
 interface HomeSectionProps {
-  onNavigateTab: (tab: 'home' | 'lessons' | 'vocab' | 'quiz' | 'game' | 'chat' | 'contact' | 'camera') => void;
+  onNavigateTab: (tab: AppNavTab) => void;
   progress: UserProgress;
   totalWords: number;
   featuredWord?: VocabWord;
@@ -38,8 +50,18 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
 
   const quickFeatures = [
     {
+      id: 'islamic',
+      tab: 'islamic' as AppNavTab,
+      title: isAr ? 'الركن الإسلامي الإنجليزي' : 'Islamic English Corner',
+      desc: isAr ? 'أدعية وأذكار يومية، مصطلحات إسلامية، وأخلاق نبوية مترجمة ومسموعة' : 'Daily Duas, Islamic vocabulary & prophetic wisdom with audio',
+      icon: Moon,
+      color: 'from-emerald-600 to-teal-700',
+      bgLight: 'bg-emerald-50/90 hover:bg-emerald-100/70 border-emerald-300/80',
+      badge: isAr ? 'مميّز وخاص' : 'Spiritual',
+    },
+    {
       id: 'lessons',
-      tab: 'lessons' as const,
+      tab: 'lessons' as AppNavTab,
       title: isAr ? 'الدروس والشروحات' : 'Lessons & Grammar',
       desc: isAr ? 'شروحات مبسطة مع شريط تقدم وقراءة صوتية' : 'Simplified grammar with audio & progress',
       icon: BookOpen,
@@ -49,9 +71,9 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
     },
     {
       id: 'vocab',
-      tab: 'vocab' as const,
+      tab: 'vocab' as AppNavTab,
       title: isAr ? 'الكلمات بالصور' : 'Visual Vocabulary',
-      desc: isAr ? 'كروت ملونة لكل كلمة مع النطق الصوتي الذكوري' : 'Visual flashcards with male voice audio',
+      desc: isAr ? 'كروت ملونة لكل كلمة مع النطق الصوتي المتقن' : 'Visual flashcards with clear audio pronunciation',
       icon: Volume2,
       color: 'from-teal-600 to-emerald-600',
       bgLight: 'bg-teal-50/80 hover:bg-teal-100/60 border-teal-200/80',
@@ -59,7 +81,7 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
     },
     {
       id: 'quiz',
-      tab: 'quiz' as const,
+      tab: 'quiz' as AppNavTab,
       title: isAr ? 'الاختبارات التفاعلية' : 'Interactive Quizzes',
       desc: isAr ? 'اختبارات خيارات متعددة مع نجوم واحتفال وتصحيح صوتي' : 'MCQ cards with celebration & voice feedback',
       icon: HelpCircle,
@@ -69,7 +91,7 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
     },
     {
       id: 'game',
-      tab: 'game' as const,
+      tab: 'game' as AppNavTab,
       title: isAr ? 'اللعبة التفاعلية' : 'Play & Learn Game',
       desc: isAr ? 'لعبة سريعة ملونة بنقاط ومستويات وتحدي زمني' : 'Fast-paced word matching with timer & levels',
       icon: Gamepad2,
@@ -79,17 +101,17 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
     },
     {
       id: 'chat',
-      tab: 'chat' as const,
-      title: isAr ? 'الشات الذكي (مستر محمود)' : 'AI Tutor Chat',
-      desc: isAr ? 'محادثة وتصحيح أسئلة مع المعلم الذكي صوتياً' : 'Ask questions and practice conversation with AI',
+      tab: 'chat' as AppNavTab,
+      title: isAr ? 'الشات مع مستر محمود' : 'Chat with Mr. Mahmoud',
+      desc: isAr ? 'محادثة وتدريب وتصحيح أسئلة مع مستر محمود علي صوتياً' : 'Ask questions and practice conversation with Mr. Mahmoud',
       icon: MessageSquare,
       color: 'from-cyan-600 to-blue-600',
       bgLight: 'bg-cyan-50/80 hover:bg-cyan-100/60 border-cyan-200/80',
-      badge: isAr ? 'متصل الآن' : 'Online',
+      badge: isAr ? 'مستر محمود' : 'Online',
     },
     {
       id: 'camera',
-      tab: 'camera' as const,
+      tab: 'camera' as AppNavTab,
       title: isAr ? 'ترجمة الكاميرا الحية' : 'Live Camera Vision',
       desc: isAr ? 'التقط أي شيء حولك لترجمته ونطقه فوراً' : 'Snap any real-world object for instant translation',
       icon: Camera,
@@ -102,8 +124,8 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
   return (
     <div className="space-y-6">
       {/* Visual Hero Welcome Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 text-white p-6 sm:p-8 border border-indigo-500/20 shadow-xl shadow-indigo-950/20">
-        <div className="absolute top-0 end-0 w-80 h-80 bg-teal-500/15 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16"></div>
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-emerald-950 text-white p-6 sm:p-8 border border-emerald-500/20 shadow-xl shadow-slate-950/20">
+        <div className="absolute top-0 end-0 w-80 h-80 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16"></div>
         <div className="absolute bottom-0 start-0 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none -ml-16 -mb-16"></div>
 
         <div className="relative z-10 space-y-4">
@@ -112,9 +134,13 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
               <Sparkles className="w-3.5 h-3.5" />
               <span>{isAr ? 'منظومة تعليمية متكاملة' : 'Complete Learning Ecosystem'}</span>
             </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">
+              <Moon className="w-3.5 h-3.5" />
+              <span>{isAr ? 'مدعوم بالركن الإسلامي' : 'Islamic Corner Added'}</span>
+            </span>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-teal-400/20 text-teal-300 border border-teal-400/30">
               <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
-              <span>{isAr ? 'نطق رجالي صوتي موحد' : 'Pure Male Voice Audio'}</span>
+              <span>{isAr ? 'نطق صوتي تفاعلي دقيق' : 'Interactive Clear Audio'}</span>
             </span>
           </div>
 
@@ -124,8 +150,8 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
             </h1>
             <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
               {isAr
-                ? 'رحلتك الممتعة لإتقان اللغة الإنجليزية: بالصور التوضيحية، والدروس المنظمة، والاختبارات التفاعلية، والشات الذكي مع المعلم مستر محمود.'
-                : 'Your joyful path to mastering English: visual vocabulary, structured lessons, interactive quizzes, engaging educational games, and smart AI chat.'}
+                ? 'رحلتك المباركة والممتعة لإتقان الإنجليزية: ركن إسلامي للأذكار والمصطلحات، دروس وشروحات منظمة، كلمات مصورة ناطقة، واختبارات تفاعلية.'
+                : 'Your rewarding journey to mastering English: Islamic corner, structured lessons, visual vocabulary in clear pronunciation, and interactive quizzes.'}
             </p>
           </div>
 
@@ -134,13 +160,24 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
             <button
               onClick={() => {
                 playUiSound('tap');
+                onNavigateTab('islamic');
+              }}
+              className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center gap-2"
+            >
+              <Moon className="w-4 h-4 text-amber-300" />
+              <span>{isAr ? 'الركن الإسلامي الإنجليزي' : 'Islamic Corner'}</span>
+              {isAr ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+            </button>
+
+            <button
+              onClick={() => {
+                playUiSound('tap');
                 onNavigateTab('lessons');
               }}
-              className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center gap-2"
+              className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold text-xs sm:text-sm backdrop-blur-md transition-all active:scale-95 flex items-center gap-2"
             >
-              <BookOpen className="w-4 h-4" />
-              <span>{isAr ? 'ابدأ الدروس الآن' : 'Start Lessons'}</span>
-              {isAr ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+              <BookOpen className="w-4 h-4 text-teal-300" />
+              <span>{isAr ? 'الدروس والشروحات' : 'Lessons'}</span>
             </button>
 
             <button
@@ -150,7 +187,7 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
               }}
               className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold text-xs sm:text-sm backdrop-blur-md transition-all active:scale-95 flex items-center gap-2"
             >
-              <Volume2 className="w-4 h-4 text-teal-300" />
+              <Volume2 className="w-4 h-4 text-amber-300" />
               <span>{isAr ? 'الكلمات بالصور' : 'Visual Vocab'}</span>
             </button>
 
@@ -161,7 +198,7 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
               }}
               className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold text-xs sm:text-sm backdrop-blur-md transition-all active:scale-95 flex items-center gap-2"
             >
-              <Phone className="w-4 h-4 text-amber-300" />
+              <Phone className="w-4 h-4 text-cyan-300" />
               <span>{isAr ? 'تواصل مع أ / محمود' : 'Contact Mr. Mahmoud'}</span>
             </button>
           </div>
@@ -311,7 +348,7 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
                 </div>
 
                 <div>
-                  <h3 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-blue-900 transition-colors">
+                  <h3 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-emerald-900 transition-colors">
                     {feat.title}
                   </h3>
                   <p className="text-xs text-slate-600 leading-relaxed mt-1">
@@ -319,7 +356,7 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
                   </p>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-center justify-between text-xs font-bold text-slate-700 group-hover:text-blue-700">
+                <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-center justify-between text-xs font-bold text-slate-700 group-hover:text-emerald-700">
                   <span>{isAr ? 'دخول القسم' : 'Explore'}</span>
                   {isAr ? <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" /> : <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />}
                 </div>

@@ -87,16 +87,16 @@ export const COMPREHENSIVE_QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 'q-8',
     lessonId: 'lesson-4',
-    questionAr: 'كيف تنفي هذه الجملة بشكل سليم: "She works on Sundays"؟',
-    questionEn: 'Negative form:',
+    questionAr: 'كيف تنفي هذه الجملة بشكل سليم: "Mahmoud works on Sundays"؟',
+    questionEn: 'Negative form for: "Mahmoud works on Sundays"',
     options: [
-      "She don't work on Sundays.",
-      "She doesn't work on Sundays.",
-      "She doesn't works on Sundays.",
-      "She not work on Sundays.",
+      "He don't work on Sundays.",
+      "He doesn't work on Sundays.",
+      "He doesn't works on Sundays.",
+      "He not work on Sundays.",
     ],
     correctIndex: 1,
-    explanationAr: 'مع (She) نستخدم "doesn\'t" ويرجع الفعل لأصله مجرداً من الـ s فتصبح: "She doesn\'t work".',
+    explanationAr: 'مع المفرد الغائب (He / Mahmoud) نستخدم "doesn\'t" ويرجع الفعل لأصله مجرداً فتصبح: "He doesn\'t work".',
   },
   {
     id: 'q-9',

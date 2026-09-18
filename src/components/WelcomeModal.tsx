@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, BookOpen, Volume2, ArrowRight, ArrowLeft, CheckCircle2, ShieldCheck, Phone } from 'lucide-react';
+import { Sparkles, BookOpen, Volume2, ArrowRight, ArrowLeft, Phone, Moon } from 'lucide-react';
 import { playUiSound, speakArabic } from '../utils/speech';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -54,12 +54,22 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
         {/* Feature Highlights */}
         <div className="p-6 space-y-4">
           <div className="space-y-2.5">
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 text-xs">
+              <div className="w-8 h-8 rounded-xl bg-emerald-700 text-white flex items-center justify-center shrink-0">
+                <Moon className="w-4 h-4" />
+              </div>
+              <div>
+                <strong className="text-slate-900 block">{isAr ? 'الركن الإسلامي الإنجليزي' : 'Islamic English Corner'}</strong>
+                <span className="text-slate-600">{isAr ? 'أدعية وأذكار ومصطلحات وأخلاق نبوية مترجمة وناطقة بوضوح' : 'Duas, vocabulary & prophetic morals with clear audio'}</span>
+              </div>
+            </div>
+
             <div className="flex items-center gap-3 p-3 rounded-2xl bg-teal-50/70 border border-teal-200/70 text-xs">
               <div className="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center shrink-0">
                 <Volume2 className="w-4 h-4" />
               </div>
               <div>
-                <strong className="text-slate-900 block">{isAr ? 'نطق رجالي صوتي موحد' : 'Pure Male Voice Audio'}</strong>
+                <strong className="text-slate-900 block">{isAr ? 'نظام ناطق تفاعلي متكامل' : 'Interactive Speech Audio'}</strong>
                 <span className="text-slate-600">{isAr ? 'استماع مباشر عند الضغط على أي كلمة أو درس أو اختبار' : 'Clear speech synthesis for all words and lessons'}</span>
               </div>
             </div>
