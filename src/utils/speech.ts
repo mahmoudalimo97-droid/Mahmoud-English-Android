@@ -88,9 +88,9 @@ export function playUiSound(type: 'tap' | 'success' | 'pop' | 'chime' | 'shutter
 }
 
 /**
- * Pronounce English text using speech synthesis
+ * Pronounce English text using a distinct, natural MALE voice
  */
-export function speakEnglish(text: string, rate: number = 0.9): Promise<void> {
+export function speakEnglish(text: string, rate: number = 0.92): Promise<void> {
   return new Promise((resolve) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
       resolve();
@@ -102,17 +102,48 @@ export function speakEnglish(text: string, rate: number = 0.9): Promise<void> {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'en-US';
       utterance.rate = rate;
-      utterance.pitch = 1.0;
+      // 0.88 pitch gives a confident, warm, masculine voice
+      utterance.pitch = 0.88;
 
       const voices = window.speechSynthesis.getVoices();
-      const englishVoice =
-        voices.find(
-          (v) => (v.lang.startsWith('en-US') || v.lang.startsWith('en-GB')) && v.name.includes('Natural')
-        ) ||
-        voices.find((v) => v.lang.startsWith('en-US') || v.lang.startsWith('en-GB'));
+      
+      // Strict exclusion of female voices to guarantee a male speaker
+      const femaleKeywords = [
+        'female', 'woman', 'zira', 'samantha', 'victoria', 'karen', 'hazel',
+        'catherine', 'linda', 'mary', 'jenny', 'aria', 'susan', 'serena',
+        'stephanie', 'zoe', 'clara', 'alice', 'fiona', 'allison', 'ava'
+      ];
+      
+      // Prioritize recognized high quality male voice identifiers
+      const maleKeywords = [
+        'male', 'david', 'george', 'guy', 'mark', 'daniel', 'oliver', 'alex',
+        'fred', 'richard', 'james', 'brian', 'andrew', 'thomas', 'matthew',
+        'tom', 'steffan', 'paul', 'ryan', 'natural'
+      ];
 
-      if (englishVoice) {
-        utterance.voice = englishVoice;
+      const isEnglish = (v: SpeechSynthesisVoice) =>
+        v.lang.startsWith('en-US') || v.lang.startsWith('en-GB') || v.lang.startsWith('en');
+
+      const isNotFemale = (v: SpeechSynthesisVoice) =>
+        !femaleKeywords.some((kw) => v.name.toLowerCase().includes(kw));
+
+      // 1. First priority: English voice with explicit male identifier and not female
+      let selectedVoice = voices.find(
+        (v) => isEnglish(v) && isNotFemale(v) && maleKeywords.some((kw) => v.name.toLowerCase().includes(kw))
+      );
+
+      // 2. Second priority: Any English voice that is explicitly not female
+      if (!selectedVoice) {
+        selectedVoice = voices.find((v) => isEnglish(v) && isNotFemale(v));
+      }
+
+      // 3. Fallback: Any English voice
+      if (!selectedVoice) {
+        selectedVoice = voices.find((v) => isEnglish(v));
+      }
+
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
       }
 
       utterance.onend = () => resolve();
@@ -126,9 +157,9 @@ export function speakEnglish(text: string, rate: number = 0.9): Promise<void> {
 }
 
 /**
- * Pronounce Arabic text using speech synthesis
+ * Pronounce Arabic text using a distinct MALE voice
  */
-export function speakArabic(text: string, rate: number = 0.95): Promise<void> {
+export function speakArabic(text: string, rate: number = 0.92): Promise<void> {
   return new Promise((resolve) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
       resolve();
@@ -140,9 +171,31 @@ export function speakArabic(text: string, rate: number = 0.95): Promise<void> {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'ar-SA';
       utterance.rate = rate;
+      // Masculine pitch tuning
+      utterance.pitch = 0.88;
 
       const voices = window.speechSynthesis.getVoices();
-      const arabicVoice = voices.find((v) => v.lang.startsWith('ar'));
+      const femaleArKeywords = ['female', 'laila', 'salma', 'hoda', 'zehra', 'mariam', 'fatima', 'nour'];
+      const maleArKeywords = ['male', 'naayf', 'maged', 'tariq', 'hamed', 'shakir', 'tarik', 'omarr'];
+
+      // Find male Arabic voice
+      let arabicVoice = voices.find(
+        (v) =>
+          v.lang.startsWith('ar') &&
+          !femaleArKeywords.some((kw) => v.name.toLowerCase().includes(kw)) &&
+          maleArKeywords.some((kw) => v.name.toLowerCase().includes(kw))
+      );
+
+      if (!arabicVoice) {
+        arabicVoice = voices.find(
+          (v) => v.lang.startsWith('ar') && !femaleArKeywords.some((kw) => v.name.toLowerCase().includes(kw))
+        );
+      }
+
+      if (!arabicVoice) {
+        arabicVoice = voices.find((v) => v.lang.startsWith('ar'));
+      }
+
       if (arabicVoice) {
         utterance.voice = arabicVoice;
       }

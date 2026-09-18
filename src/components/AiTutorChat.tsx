@@ -136,7 +136,7 @@ export const AiTutorChat: React.FC<AiTutorChatProps> = ({
   ];
 
   return (
-    <div className="flex flex-col h-[650px] bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-220px)] min-h-[520px] sm:h-[680px] bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden">
       {/* Chat Top Banner with Teacher Avatar */}
       <div className="p-3.5 sm:p-4 border-b border-slate-200 bg-gradient-to-r from-slate-50 via-blue-50/30 to-teal-50/20 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -151,12 +151,16 @@ export const AiTutorChat: React.FC<AiTutorChatProps> = ({
           </div>
 
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <h3 className="font-bold text-slate-900 text-sm sm:text-base">
                 {t('tutorName')}
               </h3>
-              <span className="text-[10px] font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.2 rounded-full border border-emerald-200">
+              <span className="text-[10px] font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200">
                 {language === 'ar' ? 'متصل الآن' : 'Online'}
+              </span>
+              <span className="text-[10px] font-semibold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full border border-blue-200 flex items-center gap-1">
+                <Sparkles className="w-2.5 h-2.5 text-blue-600" />
+                <span>AI</span>
               </span>
             </div>
             <p className="text-[11px] text-slate-500 max-w-xs truncate">

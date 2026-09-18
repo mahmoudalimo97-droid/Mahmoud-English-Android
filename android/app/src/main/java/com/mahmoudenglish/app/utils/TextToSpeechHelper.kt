@@ -31,13 +31,43 @@ class TextToSpeechHelper(private val context: Context) : TextToSpeech.OnInitList
         if (status == TextToSpeech.SUCCESS) {
             isInitialized = true
             tts?.language = Locale.US
-            tts?.setSpeechRate(0.9f)
+            tts?.setSpeechRate(0.92f)
+            // Masculine pitch tuning (0.88f) for Mr. Mahmoud Ali
+            tts?.setPitch(0.88f)
+            selectMaleVoice("en")
+        }
+    }
+
+    private fun selectMaleVoice(langCode: String) {
+        try {
+            val voices = tts?.voices
+            if (!voices.isNullOrEmpty()) {
+                val maleVoice = voices.firstOrNull { voice ->
+                    voice.locale.language.startsWith(langCode) &&
+                    !voice.name.contains("female", ignoreCase = true) &&
+                    (voice.name.contains("male", ignoreCase = true) ||
+                     voice.name.contains("guy", ignoreCase = true) ||
+                     voice.name.contains("david", ignoreCase = true) ||
+                     voice.name.contains("george", ignoreCase = true) ||
+                     voice.name.contains("sfg#male", ignoreCase = true))
+                } ?: voices.firstOrNull { voice ->
+                    voice.locale.language.startsWith(langCode) &&
+                    !voice.name.contains("female", ignoreCase = true)
+                }
+                if (maleVoice != null) {
+                    tts?.voice = maleVoice
+                }
+            }
+        } catch (e: Exception) {
+            // Safe fallback
         }
     }
 
     fun speakEnglish(text: String) {
         if (!isInitialized || text.isBlank()) return
         tts?.language = Locale.US
+        tts?.setPitch(0.88f)
+        selectMaleVoice("en")
         tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "en_utt")
     }
 
@@ -47,6 +77,8 @@ class TextToSpeechHelper(private val context: Context) : TextToSpeech.OnInitList
         val isArAvailable = tts?.isLanguageAvailable(arLocale)
         if (isArAvailable != TextToSpeech.LANG_MISSING_DATA && isArAvailable != TextToSpeech.LANG_NOT_SUPPORTED) {
             tts?.language = arLocale
+            tts?.setPitch(0.88f)
+            selectMaleVoice("ar")
         }
         tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "ar_utt")
     }

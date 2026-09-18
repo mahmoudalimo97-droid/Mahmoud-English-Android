@@ -404,78 +404,79 @@ export default function App() {
         </div>
       </main>
 
-      {/* Mobile Native Bottom Navigation Bar */}
-      <nav className="sm:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-lg border-t border-slate-200 z-40 py-1.5 px-2 flex items-center justify-around shadow-lg">
+      {/* Mobile Native Bottom Navigation Bar (Ultra Polished Native Feel) */}
+      <nav className="sm:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 z-40 px-2 pt-1.5 pb-2.5 flex items-center justify-around shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
         <button
           onClick={() => handleSelectTab('camera')}
-          className={`flex flex-col items-center py-1 px-2 rounded-xl transition-all ${
+          className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl min-h-[48px] transition-all active:scale-95 ${
             currentTab === 'camera'
-              ? 'text-blue-700 font-bold scale-105'
-              : 'text-slate-500 hover:text-slate-800'
+              ? 'bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-600 text-white shadow-sm shadow-indigo-500/20 font-bold'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70'
           }`}
         >
           <Camera className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5">{t('tabCamera')}</span>
+          <span className="text-[10px] mt-0.5 tracking-tight font-medium">{t('tabCamera')}</span>
         </button>
 
         <button
           onClick={() => handleSelectTab('vocab')}
-          className={`flex flex-col items-center py-1 px-2 rounded-xl transition-all ${
+          className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl min-h-[48px] transition-all active:scale-95 ${
             currentTab === 'vocab'
-              ? 'text-blue-700 font-bold scale-105'
-              : 'text-slate-500 hover:text-slate-800'
+              ? 'bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-600 text-white shadow-sm shadow-indigo-500/20 font-bold'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70'
           }`}
         >
           <Volume2 className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5">{t('tabVocab')}</span>
+          <span className="text-[10px] mt-0.5 tracking-tight font-medium">{t('tabVocab')}</span>
         </button>
 
         <button
           onClick={() => handleSelectTab('chat')}
-          className={`flex flex-col items-center py-1 px-2 rounded-xl transition-all ${
+          className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl min-h-[48px] transition-all active:scale-95 relative ${
             currentTab === 'chat'
-              ? 'text-blue-700 font-bold scale-105'
-              : 'text-slate-500 hover:text-slate-800'
+              ? 'bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-600 text-white shadow-sm shadow-indigo-500/20 font-bold'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70'
           }`}
         >
           <MessageSquare className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5">{t('tabChat')}</span>
+          <span className="text-[10px] mt-0.5 tracking-tight font-medium">{t('tabChat')}</span>
+          <span className="absolute 1 top-1 right-3 w-2 h-2 rounded-full bg-emerald-400 border border-white"></span>
         </button>
 
         <button
           onClick={() => handleSelectTab('lessons')}
-          className={`flex flex-col items-center py-1 px-2 rounded-xl transition-all ${
+          className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl min-h-[48px] transition-all active:scale-95 ${
             currentTab === 'lessons'
-              ? 'text-blue-700 font-bold scale-105'
-              : 'text-slate-500 hover:text-slate-800'
+              ? 'bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-600 text-white shadow-sm shadow-indigo-500/20 font-bold'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70'
           }`}
         >
           <GraduationCap className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5">{t('tabLessons')}</span>
+          <span className="text-[10px] mt-0.5 tracking-tight font-medium">{t('tabLessons')}</span>
         </button>
 
         <button
           onClick={() => handleSelectTab('game')}
-          className={`flex flex-col items-center py-1 px-2 rounded-xl transition-all ${
+          className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl min-h-[48px] transition-all active:scale-95 ${
             currentTab === 'game'
-              ? 'text-blue-700 font-bold scale-105'
-              : 'text-slate-500 hover:text-slate-800'
+              ? 'bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-600 text-white shadow-sm shadow-indigo-500/20 font-bold'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70'
           }`}
         >
           <Gamepad2 className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5">{t('tabGame')}</span>
+          <span className="text-[10px] mt-0.5 tracking-tight font-medium">{t('tabGame')}</span>
         </button>
 
         <button
           onClick={() => handleSelectTab('tips')}
-          className={`flex flex-col items-center py-1 px-2 rounded-xl transition-all ${
+          className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl min-h-[48px] transition-all active:scale-95 ${
             currentTab === 'tips'
-              ? 'text-blue-700 font-bold scale-105'
-              : 'text-slate-500 hover:text-slate-800'
+              ? 'bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-600 text-white shadow-sm shadow-indigo-500/20 font-bold'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70'
           }`}
         >
           <Lightbulb className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5">{t('tabTips')}</span>
+          <span className="text-[10px] mt-0.5 tracking-tight font-medium">{t('tabTips')}</span>
         </button>
       </nav>
 

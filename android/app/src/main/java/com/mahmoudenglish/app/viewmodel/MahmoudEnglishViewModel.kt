@@ -176,16 +176,30 @@ class MahmoudEnglishViewModel(application: Application) : AndroidViewModel(appli
 
         viewModelScope.launch {
             kotlinx.coroutines.delay(1000)
+            val lower = userText.lowercase(Locale.ROOT)
             val replyText = when {
-                userText.contains("hello", ignoreCase = true) || userText.contains("hi", ignoreCase = true) ->
-                    "Hello! It's fantastic to practice English with you today. How can I help you improve your speaking or grammar?"
-                userText.contains("coffee", ignoreCase = true) ->
-                    "Great! If you want to order coffee politely, you can say: 'Could I please have a medium latte with oat milk?' Practice saying that aloud!"
-                userText.contains("hotel", ignoreCase = true) ->
-                    "For checking into a hotel, use this handy phrase: 'Hi, I have a reservation under the name Mahmoud.' Would you like to practice a check-in roleplay?"
+                lower.contains("coffee") || lower.contains("قهوة") || lower.contains("طلب") ->
+                    "أهلاً بك يا بطل! معك مستر محمود علي ☕✨\n\nلطلب القهوة أو أي وجبة بالإنجليزية بذوق كالمتحدثين الأصليين:\n• 'Could I please have a medium latte?' (كود آي بليز هاف أ ميديام لاتيه)\n• 'I'd like a black coffee to go, please.'\n\n💡 سر مستر محمود: ابتعد عن 'I want' لأنها تبدو كأمر جاف، واستخدم دائماً 'Could I have' أو 'I'd like'!"
+
+                lower.contains("agree") || lower.contains("صحح") || lower.contains("correct") ->
+                    "أهلاً بك يا صديقي! مستر محمود علي يراجع معك الجملة 🌟\n\n❌ الخطأ الشائع: 'I am agree with you'\n✅ الصحيح المتقن: 'I agree with you'\n\n🔍 سر القاعدة: Agree فعل (Verb) وليس صفة، فلا يأتي قبله (am/is/are) تماماً مثل 'I understand'. ممتاز!"
+
+                lower.contains("since") || lower.contains("for") || lower.contains("منذ") ->
+                    "يا هلا يا فنان! مستر محمود يشرح لك الفرق:\n\n1. Since (منذ): نستخدمها مع نقطة بداية محددة (Since 2018 / Since Monday).\n2. For (لمدة): نستخدمها مع فترة محسوبة بالكامل (For 3 years / For 2 hours).\n\n🎯 تحدي اليوم: أكمل الفراغ: 'I have waited (since / for) 30 minutes'؟"
+
+                lower.contains("interview") || lower.contains("مقابلة") || lower.contains("وظيفة") || lower.contains("job") ->
+                    "مستر محمود علي يجهزك لأقوى مقابلة عمل 💼🚀\n\nللسؤال الشهير 'Tell me about yourself'، اتبع هذه الخلطة:\n1. 'Thank you for this opportunity.'\n2. 'Currently, I specialize in [مجالك]...'\n3. 'I am passionate about learning and contributing to your team.'\n\nجرّب كتابة جملة تعرف فيها عن نفسك وسأراجعها لك!"
+
+                lower.contains("look") || lower.contains("see") || lower.contains("watch") ->
+                    "سؤال ذكي ومهم جداً من المتعلم الشاطر! إليك الفرق من مستر محمود:\n\n• See: الرؤية الطبيعية بدون مجهود (أرى شيئاً بالصدفة).\n• Look: النظر والتركيز باتجاه محدد ('Look at the board!').\n• Watch: المشاهدة لشيء يتحرك أو يتغير بمرور الوقت ('Watch a movie / Watch football')."
+
+                lower.contains("hello") || lower.contains("hi") || lower.contains("مرحبا") || lower.contains("أهلا") || lower.contains("ازيك") ->
+                    "Hello champion! أهلاً بك يا بطل، أنا مستر محمود علي (Mr. Mahmoud Ali) معلمك ومرشدك الشخصي للغة الإنجليزية ومدعوم بالذكاء الاصطناعي للإجابة على كل أسئلتك. اسألني أي سؤال في القواعد أو النطق أو لنبدأ محادثة معاً!"
+
                 else ->
-                    "Excellent expression! Your grammar is clear. To make it sound even more natural in daily conversation, try emphasizing the keywords with confidence. Keep going!"
+                    "أحسنت يا بطل! سؤالك رائع ومهم جداً. مستر محمود علي معك دائماً:\n\nجملتك واضحة ومعبرة! للممارسة العملية، تذكر دائماً ربط الكلمات بنبرة واثقة، وجرّب نطق الجملة بصوت عالٍ الآن لتثبيت الكلمات في الذاكرة. هل تود أن نتدرب على جملة أخرى؟"
             }
+
             val botMsg = ChatMessage(
                 id = UUID.randomUUID().toString(),
                 role = "assistant",
@@ -195,7 +209,14 @@ class MahmoudEnglishViewModel(application: Application) : AndroidViewModel(appli
             _chatMessages.value = _chatMessages.value + botMsg
             _isChatLoading.value = false
             tts.playUiSound("chime")
-            tts.speakEnglish(replyText)
+
+            val englishChars = replyText.count { it in 'a'..'z' || it in 'A'..'Z' }
+            val arabicChars = replyText.count { it in '\u0600'..'\u06FF' }
+            if (englishChars > arabicChars) {
+                tts.speakEnglish(replyText)
+            } else {
+                tts.speakArabic(replyText)
+            }
         }
     }
 

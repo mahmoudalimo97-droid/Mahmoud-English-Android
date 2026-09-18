@@ -33,10 +33,11 @@ fun ChatTutorScreen(
     var inputText by remember { mutableStateOf("") }
 
     val quickStarters = listOf(
-        "How do I order coffee politely?",
-        "Check-in at a hotel practice",
-        "Explain present simple in simple words",
-        "Could you correct my sentence?"
+        "ازاي أطلب قهوة بالإنجليزي بذوق؟",
+        "صحح لي: I am agree with you",
+        "اشرح الفرق بين Since و For",
+        "ازاي أعرّف نفسي في مقابلة عمل؟",
+        "How do I practice speaking daily?"
     )
 
     Column(
@@ -45,12 +46,74 @@ fun ChatTutorScreen(
             .padding(horizontal = 14.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
+        // Teacher Banner Card
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp, bottom = 4.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Emerald800),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = "🎓", fontSize = 18.sp)
+                    }
+                    Column {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = "مستر محمود علي",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = Emerald500.copy(alpha = 0.2f)
+                            ) {
+                                Text(
+                                    text = "AI ⚡ متصل الآن",
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Emerald800,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                        Text(
+                            text = "معلمك وخبير اللغة الإنجليزية معك خطوة بخطوة",
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+
         // Chat Messages List
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .padding(vertical = 8.dp),
+                .padding(vertical = 6.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items(messages) { msg ->
@@ -78,19 +141,27 @@ fun ChatTutorScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = if (isUser) "أنت" else "المعلم الذكي 🎓",
+                                    text = if (isUser) "أنت" else "مستر محمود علي (معلمك الذكي) 🎓",
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = if (isUser) Emerald100 else Emerald800
                                 )
                                 if (!isUser) {
                                     IconButton(
-                                        onClick = { tts.speakEnglish(msg.content) },
+                                        onClick = {
+                                            val englishChars = msg.content.count { it in 'a'..'z' || it in 'A'..'Z' }
+                                            val arabicChars = msg.content.count { it in '\u0600'..'\u06FF' }
+                                            if (englishChars > arabicChars) {
+                                                tts.speakEnglish(msg.content)
+                                            } else {
+                                                tts.speakArabic(msg.content)
+                                            }
+                                        },
                                         modifier = Modifier.size(24.dp)
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.VolumeUp,
-                                            contentDescription = "استماع",
+                                            contentDescription = "استماع بصوت مستر محمود",
                                             tint = Emerald800,
                                             modifier = Modifier.size(16.dp)
                                         )
@@ -105,7 +176,7 @@ fun ChatTutorScreen(
                                 fontSize = 14.sp,
                                 color = if (isUser) Color.White else MaterialTheme.colorScheme.onSurface,
                                 lineHeight = 20.sp,
-                                fontFamily = if (!isUser && msg.content.contains(" ")) FontFamily.Default else FontFamily.Default
+                                fontFamily = FontFamily.Default
                             )
                         }
                     }
@@ -124,7 +195,7 @@ fun ChatTutorScreen(
                             modifier = Modifier.padding(4.dp)
                         ) {
                             Text(
-                                text = "المعلم يكتب الآن...",
+                                text = "مستر محمود علي يكتب رداً الآن...",
                                 fontSize = 12.sp,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                 color = Stone500
