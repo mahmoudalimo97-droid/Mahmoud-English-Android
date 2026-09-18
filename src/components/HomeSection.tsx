@@ -183,14 +183,14 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
             </p>
           </div>
 
-          {/* Quick CTA Buttons: 2-column grid on mobile with main green button spanning full width on top */}
-          <div className="pt-2 grid grid-cols-2 gap-2.5 sm:gap-3 md:flex md:flex-wrap md:items-center">
+          {/* Quick CTA Buttons: 2-column grid with main green button spanning full width on top */}
+          <div className="pt-2 grid grid-cols-2 gap-2.5 sm:gap-3">
             <button
               onClick={() => {
                 playUiSound('tap');
                 onNavigateTab('islamic');
               }}
-              className="col-span-2 md:col-span-1 min-h-[48px] px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+              className="col-span-2 min-h-[48px] px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
             >
               <Moon className="w-4 h-4 text-amber-300 shrink-0" />
               <span>{isAr ? 'الركن الإسلامي الإنجليزي' : 'Islamic Corner'}</span>
@@ -202,7 +202,7 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
                 playUiSound('tap');
                 onNavigateTab('lessons');
               }}
-              className="col-span-1 min-h-[48px] px-3.5 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold text-xs sm:text-sm backdrop-blur-md transition-all active:scale-95 flex items-center justify-center gap-2"
+              className="col-span-1 min-h-[48px] px-3.5 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold text-xs sm:text-sm backdrop-blur-md transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
             >
               <BookOpen className="w-4 h-4 text-teal-300 shrink-0" />
               <span>{isAr ? 'الدروس والشروحات' : 'Lessons'}</span>
@@ -213,7 +213,7 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
                 playUiSound('tap');
                 onNavigateTab('vocab');
               }}
-              className="col-span-1 min-h-[48px] px-3.5 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold text-xs sm:text-sm backdrop-blur-md transition-all active:scale-95 flex items-center justify-center gap-2"
+              className="col-span-1 min-h-[48px] px-3.5 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold text-xs sm:text-sm backdrop-blur-md transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
             >
               <Volume2 className="w-4 h-4 text-amber-300 shrink-0" />
               <span>{isAr ? 'الكلمات بالصوت' : 'Audio Vocab'}</span>
@@ -224,7 +224,7 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
                 playUiSound('tap');
                 onNavigateTab('contact');
               }}
-              className="col-span-2 md:col-span-1 min-h-[48px] px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold text-xs sm:text-sm backdrop-blur-md transition-all active:scale-95 flex items-center justify-center gap-2"
+              className="col-span-2 min-h-[48px] px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold text-xs sm:text-sm backdrop-blur-md transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
             >
               <Phone className="w-4 h-4 text-cyan-300 shrink-0" />
               <span>{isAr ? 'تواصل مع مستر محمود' : 'Contact Mr. Mahmoud'}</span>

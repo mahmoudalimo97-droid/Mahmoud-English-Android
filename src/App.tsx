@@ -380,279 +380,109 @@ export const App: React.FC = () => {
         onToggleVoiceAssist={handleToggleVoiceAssist}
       />
 
-      {/* Main Tab Navigation Bar - Desktop / Tablet (Hidden on mobile to avoid duplication with bottom nav) */}
-      <nav className={`hidden md:block sticky top-[57px] sm:top-[61px] z-20 backdrop-blur-md border-b ${themeClasses.navBg} transition-all`}>
-        <div className="max-w-6xl mx-auto px-2 sm:px-4 py-1.5 sm:py-2">
-          <div className="flex items-center justify-start sm:justify-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5 snap-x snap-mandatory scroll-smooth">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  id={`tab-btn-${tab.id}`}
-                  onClick={() => {
-                    setActiveTab(tab.id);
-                    speakTabTransition(tab.label, language as 'ar' | 'en');
-                  }}
-                  className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 snap-center active:scale-95 ${
-                    isActive ? themeClasses.activeTab : themeClasses.inactiveTab
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 ${isActive ? 'scale-110' : ''} transition-transform`} />
-                  <span>{tab.label}</span>
-                  {tab.badge && (
-                    <span
-                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
-                        isActive
-                          ? 'bg-white/20 text-white'
-                          : 'bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-                      }`}
-                    >
-                      {tab.badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </nav>
-
-      {/* Main Content Area (Optional Phone Bezel Simulation) */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-4 sm:py-6 pb-24 md:pb-8">
-        {/* High-Graphic Master Studio Hero Banner */}
-        <div className="mb-5 sm:mb-6 rounded-2xl md:rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 text-white p-4 sm:p-6 border border-indigo-500/25 shadow-xl shadow-indigo-950/20 relative overflow-hidden">
-          {/* Ambient luminous glow circles */}
-          <div className="absolute top-0 end-0 w-72 h-72 bg-teal-500/15 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16"></div>
-          <div className="absolute bottom-0 start-0 w-72 h-72 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none -ml-16 -mb-16"></div>
-
-          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                  <span>{language === 'ar' ? 'الذكاء الاصطناعي والكاميرا الحية' : 'AI Vision & Live Camera'}</span>
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold bg-teal-500/20 text-teal-300 border border-teal-400/30 shadow-2xs">
-                  <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
-                  <span>{language === 'ar' ? 'منظومة تفاعلية متكاملة' : 'Integrated Learning Hub'}</span>
-                </span>
-              </div>
-
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-white font-serif flex items-center gap-2">
-                <span>{language === 'ar' ? 'أكاديمية مستر محمود علي للإنجليزية' : 'Mr. Mahmoud Ali English Academy'}</span>
-              </h2>
-
-              <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-                {language === 'ar'
-                  ? 'تعلم الإنجليزية بترجمة الكاميرا الفورية، وقاموس مصوّر ذكي، ودروس واختبارات تفاعلية، وشات ذكي متقدم مع مستر محمود علي.'
-                  : 'Master English with real-time camera translation, smart visual dictionary, interactive lessons & quizzes, and AI tutor Mr. Mahmoud Ali.'}
-              </p>
-            </div>
-
-            {/* Quick Stats Banner */}
-            <div className="flex flex-wrap md:flex-col items-stretch gap-2.5 w-full md:w-auto shrink-0">
-              <div className="flex items-center justify-between gap-3.5 px-4 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-xs shadow-inner">
-                <div className="flex items-center gap-2 text-slate-200">
-                  <BookOpen className="w-4 h-4 text-blue-400" />
-                  <span className="font-semibold">{savedWords.length} {language === 'ar' ? 'كلمة' : 'Words'}</span>
-                </div>
-                <div className="w-px h-4 bg-white/20"></div>
-                <div className="flex items-center gap-2 text-amber-300 font-semibold">
-                  <Flame className="w-4 h-4 text-amber-400 animate-pulse" />
-                  <span>{progress.streakDays} {language === 'ar' ? 'يوم' : 'Days'}</span>
-                </div>
-                <div className="w-px h-4 bg-white/20"></div>
-                <div className="flex items-center gap-2 text-emerald-300 font-semibold">
-                  <Award className="w-4 h-4 text-emerald-400" />
-                  <span>{progress.gameHighScore} {language === 'ar' ? 'نقطة' : 'Pts'}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {isPhoneFrame ? (
-          <div className="max-w-[420px] mx-auto bg-black rounded-[48px] p-3.5 shadow-2xl ring-8 ring-slate-800/40 border-4 border-slate-700 my-4 transition-all">
-            {/* Phone Top Speaker & Camera Notch */}
-            <div className="w-full flex justify-center py-2 relative">
-              <div className="w-24 h-4 bg-slate-900 rounded-full flex items-center justify-end px-3">
-                <div className="w-2 h-2 rounded-full bg-blue-900/60 ring-1 ring-blue-500/30"></div>
-              </div>
-            </div>
-
-            {/* Phone Screen Canvas */}
-            <div className={`rounded-[36px] overflow-hidden ${themeClasses.bg} min-h-[720px] max-h-[820px] overflow-y-auto p-4`}>
-              {activeTab === 'home' && (
-                <HomeSection
-                  onNavigateTab={(tab) => {
-                    setActiveTab(tab as NavTab);
-                    const found = tabs.find((t) => t.id === tab);
-                    if (found) speakTabTransition(found.label, language as 'ar' | 'en');
-                  }}
-                  progress={progress}
-                  totalWords={savedWords.length}
-                  featuredWord={savedWords[0]}
-                />
-              )}
-              {activeTab === 'islamic' && <IslamicCornerSection />}
-              {activeTab === 'lessons' && (
-                <LessonsSection
-                  completedLessons={completedLessons}
-                  onMarkLessonCompleted={handleMarkLessonCompleted}
-                />
-              )}
-              {activeTab === 'vocab' && (
-                <SpeakingVocab
-                  allWords={savedWords}
-                  onAddCustomWord={handleSaveWord}
-                  onDeleteWord={handleDeleteWord}
-                />
-              )}
-              {activeTab === 'quiz' && (
-                <QuizzesSection
-                  onSaveQuizResult={handleSaveQuizResult}
-                  quizHistory={quizHistory}
-                />
-              )}
-              {activeTab === 'game' && (
-                <InteractiveGameSection
-                  highScore={progress.gameHighScore}
-                  onUpdateHighScore={handleUpdateHighScore}
-                />
-              )}
-              {activeTab === 'chat' && (
-                <AiTutorChat
-                  messages={chatMessages}
-                  onSendMessage={handleSendMessage}
-                  onClearChat={handleClearChat}
-                  isLoading={isChatLoading}
-                  onSaveWord={handleSaveWord}
-                />
-              )}
-              {activeTab === 'contact' && <ContactSection />}
-              {activeTab === 'camera' && (
-                <CameraTranslator
-                  onSaveWord={handleSaveWord}
-                  savedWords={savedWords}
-                  scanHistory={scanHistory}
-                  onAddScanResult={handleAddScanResult}
-                  onDeleteScan={handleDeleteScan}
-                />
-              )}
-              {activeTab === 'tips' && <ArabicTips />}
-            </div>
-
-            {/* Phone Bottom Home Bar */}
-            <div className="w-full flex justify-center py-2.5">
-              <div className="w-32 h-1 bg-slate-600 rounded-full"></div>
-            </div>
-          </div>
-        ) : (
-          /* Standard Responsive Web Layout */
-          <div className="transition-all">
-            {activeTab === 'home' && (
-              <HomeSection
-                onNavigateTab={(tab) => {
-                  setActiveTab(tab as NavTab);
-                  const found = tabs.find((t) => t.id === tab);
-                  if (found) speakTabTransition(found.label, language as 'ar' | 'en');
-                }}
-                progress={progress}
-                totalWords={savedWords.length}
-                featuredWord={savedWords[0]}
-              />
-            )}
-            {activeTab === 'islamic' && <IslamicCornerSection />}
-            {activeTab === 'lessons' && (
-              <LessonsSection
-                completedLessons={completedLessons}
-                onMarkLessonCompleted={handleMarkLessonCompleted}
-              />
-            )}
-            {activeTab === 'vocab' && (
-              <SpeakingVocab
-                allWords={savedWords}
-                onAddCustomWord={handleSaveWord}
-                onDeleteWord={handleDeleteWord}
-              />
-            )}
-            {activeTab === 'quiz' && (
-              <QuizzesSection
-                onSaveQuizResult={handleSaveQuizResult}
-                quizHistory={quizHistory}
-              />
-            )}
-            {activeTab === 'game' && (
-              <InteractiveGameSection
-                highScore={progress.gameHighScore}
-                onUpdateHighScore={handleUpdateHighScore}
-              />
-            )}
-            {activeTab === 'chat' && (
-              <AiTutorChat
-                messages={chatMessages}
-                onSendMessage={handleSendMessage}
-                onClearChat={handleClearChat}
-                isLoading={isChatLoading}
-                onSaveWord={handleSaveWord}
-              />
-            )}
-            {activeTab === 'contact' && <ContactSection />}
-            {activeTab === 'camera' && (
-              <CameraTranslator
-                onSaveWord={handleSaveWord}
-                savedWords={savedWords}
-                scanHistory={scanHistory}
-                onAddScanResult={handleAddScanResult}
-                onDeleteScan={handleDeleteScan}
-              />
-            )}
-            {activeTab === 'tips' && <ArabicTips />}
-          </div>
+      {/* Main Content Area - Centered Mobile App Layout */}
+      <main className="flex-1 w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto px-3.5 sm:px-4 py-4 pb-24">
+        {activeTab === 'home' && (
+          <HomeSection
+            onNavigateTab={(tab) => {
+              setActiveTab(tab as NavTab);
+              const found = tabs.find((t) => t.id === tab);
+              if (found) speakTabTransition(found.label, language as 'ar' | 'en');
+            }}
+            progress={progress}
+            totalWords={savedWords.length}
+            featuredWord={savedWords[0]}
+          />
         )}
+        {activeTab === 'islamic' && <IslamicCornerSection />}
+        {activeTab === 'lessons' && (
+          <LessonsSection
+            completedLessons={completedLessons}
+            onMarkLessonCompleted={handleMarkLessonCompleted}
+          />
+        )}
+        {activeTab === 'vocab' && (
+          <SpeakingVocab
+            allWords={savedWords}
+            onAddCustomWord={handleSaveWord}
+            onDeleteWord={handleDeleteWord}
+          />
+        )}
+        {activeTab === 'quiz' && (
+          <QuizzesSection
+            onSaveQuizResult={handleSaveQuizResult}
+            quizHistory={quizHistory}
+          />
+        )}
+        {activeTab === 'game' && (
+          <InteractiveGameSection
+            highScore={progress.gameHighScore}
+            onUpdateHighScore={handleUpdateHighScore}
+          />
+        )}
+        {activeTab === 'chat' && (
+          <AiTutorChat
+            messages={chatMessages}
+            onSendMessage={handleSendMessage}
+            onClearChat={handleClearChat}
+            isLoading={isChatLoading}
+            onSaveWord={handleSaveWord}
+          />
+        )}
+        {activeTab === 'contact' && <ContactSection />}
+        {activeTab === 'camera' && (
+          <CameraTranslator
+            onSaveWord={handleSaveWord}
+            savedWords={savedWords}
+            scanHistory={scanHistory}
+            onAddScanResult={handleAddScanResult}
+            onDeleteScan={handleDeleteScan}
+          />
+        )}
+        {activeTab === 'tips' && <ArabicTips />}
       </main>
 
-      {/* Fixed Bottom Navigation Bar on Mobile (Home, Words, Quiz, Chat, Contact) */}
+      {/* Fixed Bottom Navigation Bar (Home, Words, Quiz, Chat, Contact) */}
       <nav
-        aria-label="Mobile Bottom Navigation"
-        className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200/90 dark:border-slate-800 shadow-2xl px-1 pt-1.5 pb-[max(env(safe-area-inset-bottom,0px),0.5rem)] flex items-center justify-around"
+        aria-label="App Bottom Navigation"
+        className="fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200/90 dark:border-slate-800 shadow-2xl safe-area-bottom"
       >
-        {mobileNavItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              id={`mobile-bottom-nav-${item.id}`}
-              onClick={() => {
-                playUiSound('tap');
-                setActiveTab(item.id);
-                speakTabTransition(item.label, language as 'ar' | 'en');
-              }}
-              className={`min-w-[60px] min-h-[48px] px-2 py-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all active:scale-95 relative cursor-pointer ${
-                isActive
-                  ? 'text-teal-700 dark:text-teal-300 font-bold'
-                  : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 font-medium'
-              }`}
-            >
-              {isActive && (
-                <span className="absolute top-0 w-8 h-1 rounded-full bg-teal-600 dark:bg-teal-400" />
-              )}
-              <Icon
-                className={`w-5 h-5 ${
+        <div className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto px-1 pt-1.5 pb-[max(env(safe-area-inset-bottom,0px),0.5rem)] flex items-center justify-around">
+          {mobileNavItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                id={`mobile-bottom-nav-${item.id}`}
+                onClick={() => {
+                  playUiSound('tap');
+                  setActiveTab(item.id);
+                  speakTabTransition(item.label, language as 'ar' | 'en');
+                }}
+                className={`min-w-[60px] min-h-[48px] px-2 py-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all active:scale-95 relative cursor-pointer ${
                   isActive
-                    ? 'scale-110 text-teal-600 dark:text-teal-400'
-                    : 'text-slate-500 dark:text-slate-400'
-                } transition-transform`}
-              />
-              <span className="text-xs leading-none whitespace-nowrap mt-0.5">
-                {item.label}
-              </span>
-            </button>
-          );
-        })}
+                    ? 'text-teal-700 dark:text-teal-300 font-bold'
+                    : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 font-medium'
+                }`}
+              >
+                {isActive && (
+                  <span className="absolute top-0 w-8 h-1 rounded-full bg-teal-600 dark:bg-teal-400" />
+                )}
+                <Icon
+                  className={`w-5 h-5 ${
+                    isActive
+                      ? 'scale-110 text-teal-600 dark:text-teal-400'
+                      : 'text-slate-500 dark:text-slate-400'
+                  } transition-transform`}
+                />
+                <span className="text-xs leading-none whitespace-nowrap mt-0.5">
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </nav>
 
       {/* Offline Indicator */}
