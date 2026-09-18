@@ -20,6 +20,14 @@ function getAudioContext(): AudioContext | null {
   return audioCtx;
 }
 
+// Pre-load voices immediately
+if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => {
+    window.speechSynthesis.getVoices();
+  };
+}
+
 /**
  * Play subtle, polished UI sound effects (Tap, Success, Pop, Chime)
  */
@@ -87,6 +95,30 @@ export function playUiSound(type: 'tap' | 'success' | 'pop' | 'chime' | 'shutter
   }
 }
 
+// Universal ban-list for all female voices across Web Speech synthesis implementations
+const FEMALE_KEYWORDS = [
+  'female', 'woman', 'zira', 'samantha', 'victoria', 'karen', 'hazel',
+  'catherine', 'linda', 'mary', 'jenny', 'aria', 'susan', 'serena',
+  'stephanie', 'zoe', 'clara', 'alice', 'fiona', 'allison', 'ava',
+  'siri female', 'laila', 'salma', 'hoda', 'zehra', 'mariam', 'fatima',
+  'nour', 'mona', 'najat', 'leila', 'sara', 'sarah', 'ayanda', 'yara',
+  'helena', 'elena', 'eva', 'claudia', 'laura', 'anna', 'julie'
+];
+
+// High-confidence male voice names across Windows, Android, Chrome OS, macOS, iOS, Linux
+const MALE_EN_KEYWORDS = [
+  'male', 'david', 'george', 'guy', 'mark', 'daniel', 'oliver', 'alex',
+  'fred', 'richard', 'james', 'brian', 'andrew', 'thomas', 'matthew',
+  'tom', 'steffan', 'paul', 'ryan', 'natural', 'microsoft david', 'microsoft guy',
+  'microsoft mark', 'google us english male', 'google uk english male', 'en-us-x-'
+];
+
+const MALE_AR_KEYWORDS = [
+  'male', 'naayf', 'maged', 'tariq', 'hamed', 'shakir', 'tarik', 'omarr',
+  'zein', 'youssef', 'khalid', 'hassan', 'mustafa', 'ahmed', 'karim',
+  'microsoft shakur', 'microsoft hamed', 'google ar male'
+];
+
 /**
  * Pronounce English text using a distinct, natural MALE voice
  */
@@ -102,34 +134,18 @@ export function speakEnglish(text: string, rate: number = 0.92): Promise<void> {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'en-US';
       utterance.rate = rate;
-      // 0.88 pitch gives a confident, warm, masculine voice
-      utterance.pitch = 0.88;
 
       const voices = window.speechSynthesis.getVoices();
-      
-      // Strict exclusion of female voices to guarantee a male speaker
-      const femaleKeywords = [
-        'female', 'woman', 'zira', 'samantha', 'victoria', 'karen', 'hazel',
-        'catherine', 'linda', 'mary', 'jenny', 'aria', 'susan', 'serena',
-        'stephanie', 'zoe', 'clara', 'alice', 'fiona', 'allison', 'ava'
-      ];
-      
-      // Prioritize recognized high quality male voice identifiers
-      const maleKeywords = [
-        'male', 'david', 'george', 'guy', 'mark', 'daniel', 'oliver', 'alex',
-        'fred', 'richard', 'james', 'brian', 'andrew', 'thomas', 'matthew',
-        'tom', 'steffan', 'paul', 'ryan', 'natural'
-      ];
 
       const isEnglish = (v: SpeechSynthesisVoice) =>
         v.lang.startsWith('en-US') || v.lang.startsWith('en-GB') || v.lang.startsWith('en');
 
       const isNotFemale = (v: SpeechSynthesisVoice) =>
-        !femaleKeywords.some((kw) => v.name.toLowerCase().includes(kw));
+        !FEMALE_KEYWORDS.some((kw) => v.name.toLowerCase().includes(kw));
 
       // 1. First priority: English voice with explicit male identifier and not female
       let selectedVoice = voices.find(
-        (v) => isEnglish(v) && isNotFemale(v) && maleKeywords.some((kw) => v.name.toLowerCase().includes(kw))
+        (v) => isEnglish(v) && isNotFemale(v) && MALE_EN_KEYWORDS.some((kw) => v.name.toLowerCase().includes(kw))
       );
 
       // 2. Second priority: Any English voice that is explicitly not female
@@ -144,6 +160,17 @@ export function speakEnglish(text: string, rate: number = 0.92): Promise<void> {
 
       if (selectedVoice) {
         utterance.voice = selectedVoice;
+        const voiceNameLower = selectedVoice.name.toLowerCase();
+        // If the voice is known male, use natural rich pitch 0.85
+        if (MALE_EN_KEYWORDS.some((kw) => voiceNameLower.includes(kw))) {
+          utterance.pitch = 0.85;
+        } else {
+          // If fallback voice might be neutral or generic, lower pitch to 0.78 to guarantee deep male tone
+          utterance.pitch = 0.78;
+        }
+      } else {
+        // No custom voice assigned: default to masculine pitch
+        utterance.pitch = 0.80;
       }
 
       utterance.onend = () => resolve();
@@ -171,24 +198,20 @@ export function speakArabic(text: string, rate: number = 0.92): Promise<void> {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'ar-SA';
       utterance.rate = rate;
-      // Masculine pitch tuning
-      utterance.pitch = 0.88;
 
       const voices = window.speechSynthesis.getVoices();
-      const femaleArKeywords = ['female', 'laila', 'salma', 'hoda', 'zehra', 'mariam', 'fatima', 'nour'];
-      const maleArKeywords = ['male', 'naayf', 'maged', 'tariq', 'hamed', 'shakir', 'tarik', 'omarr'];
 
       // Find male Arabic voice
       let arabicVoice = voices.find(
         (v) =>
           v.lang.startsWith('ar') &&
-          !femaleArKeywords.some((kw) => v.name.toLowerCase().includes(kw)) &&
-          maleArKeywords.some((kw) => v.name.toLowerCase().includes(kw))
+          !FEMALE_KEYWORDS.some((kw) => v.name.toLowerCase().includes(kw)) &&
+          MALE_AR_KEYWORDS.some((kw) => v.name.toLowerCase().includes(kw))
       );
 
       if (!arabicVoice) {
         arabicVoice = voices.find(
-          (v) => v.lang.startsWith('ar') && !femaleArKeywords.some((kw) => v.name.toLowerCase().includes(kw))
+          (v) => v.lang.startsWith('ar') && !FEMALE_KEYWORDS.some((kw) => v.name.toLowerCase().includes(kw))
         );
       }
 
@@ -198,6 +221,15 @@ export function speakArabic(text: string, rate: number = 0.92): Promise<void> {
 
       if (arabicVoice) {
         utterance.voice = arabicVoice;
+        const voiceNameLower = arabicVoice.name.toLowerCase();
+        if (MALE_AR_KEYWORDS.some((kw) => voiceNameLower.includes(kw))) {
+          utterance.pitch = 0.85;
+        } else {
+          // Ensure deep masculine tone
+          utterance.pitch = 0.78;
+        }
+      } else {
+        utterance.pitch = 0.80;
       }
 
       utterance.onend = () => resolve();
@@ -223,6 +255,18 @@ export async function speakWordWithExplanation(
   // Short pause before Arabic translation
   await new Promise((r) => setTimeout(r, 260));
   await speakArabic(arabic, 0.95);
+}
+
+/**
+ * Vocalize tab transition in male voice directly
+ */
+export async function speakTabTransition(tabName: string, lang: 'ar' | 'en' = 'ar'): Promise<void> {
+  playUiSound('tap');
+  if (lang === 'ar') {
+    await speakArabic(tabName, 1.05);
+  } else {
+    await speakEnglish(tabName, 1.05);
+  }
 }
 
 export function stopSpeaking(): void {

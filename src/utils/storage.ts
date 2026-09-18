@@ -8,6 +8,7 @@ const STORAGE_KEYS = {
   PROGRESS: 'mahmoud_english_progress_v1',
   THEME: 'mahmoud_english_theme_v1',
   FAVORITES: 'mahmoud_english_favorites_v1',
+  LESSONS_COMPLETED: 'mahmoud_english_lessons_completed_v1',
 };
 
 // Safe JSON parser
@@ -177,6 +178,18 @@ export const StorageService = {
 
   setTheme(theme: string): void {
     safeSet(STORAGE_KEYS.THEME, theme);
+  },
+
+  // Lessons Progress
+  getCompletedLessons(): Record<string, boolean> {
+    return safeGet<Record<string, boolean>>(STORAGE_KEYS.LESSONS_COMPLETED, {});
+  },
+
+  markLessonCompleted(lessonId: string): Record<string, boolean> {
+    const current = this.getCompletedLessons();
+    const updated = { ...current, [lessonId]: true };
+    safeSet(STORAGE_KEYS.LESSONS_COMPLETED, updated);
+    return updated;
   },
 
   // Full Backup & Restore

@@ -1,16 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Camera,
-  Volume2,
+  BookOpen,
   MessageSquare,
   GraduationCap,
   Gamepad2,
   Lightbulb,
-  Sparkles,
-  Database,
   Smartphone,
+  Sparkles,
+  Volume2,
+  Award,
+  Flame,
+  Home,
+  HelpCircle,
+  Phone,
 } from 'lucide-react';
+import {
+  ThemeStyle,
+  UserProgress,
+  VocabWord,
+  ScanResult,
+  ChatMessage,
+  QuizAttempt,
+} from './types';
+import { StorageService } from './utils/storage';
+import { DEFAULT_VOCABULARY } from './data/defaultVocab';
+import { playUiSound, speakArabic, speakEnglish, speakTabTransition } from './utils/speech';
+import { useLanguage } from './context/LanguageContext';
+import { usePWAInstall } from './hooks/usePWAInstall';
+
+// Components
 import { Header } from './components/Header';
+import { HomeSection } from './components/HomeSection';
+import { LessonsSection } from './components/LessonsSection';
+import { QuizzesSection } from './components/QuizzesSection';
+import { InteractiveGameSection } from './components/InteractiveGameSection';
+import { ContactSection } from './components/ContactSection';
+import { WelcomeModal } from './components/WelcomeModal';
 import { CameraTranslator } from './components/CameraTranslator';
 import { SpeakingVocab } from './components/SpeakingVocab';
 import { AiTutorChat } from './components/AiTutorChat';
@@ -20,171 +46,237 @@ import { ArabicTips } from './components/ArabicTips';
 import { MemoryManagerModal } from './components/MemoryManagerModal';
 import { AndroidProjectModal } from './components/AndroidProjectModal';
 import { AndroidInstallGuideModal } from './components/AndroidInstallGuideModal';
+import { ContactModal } from './components/ContactModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
-import { usePWAInstall } from './hooks/usePWAInstall';
-import { useLanguage } from './context/LanguageContext';
 
-import {
-  ThemeStyle,
-  VocabWord,
-  ScanResult,
-  ChatMessage,
-  QuizAttempt,
-  UserProgress,
-} from './types';
-import { StorageService } from './utils/storage';
-import { DEFAULT_VOCABULARY } from './data/defaultVocab';
-import { playUiSound, speakWordWithExplanation } from './utils/speech';
+type NavTab = 'home' | 'lessons' | 'vocab' | 'quiz' | 'game' | 'chat' | 'contact' | 'camera' | 'tips';
 
-export default function App() {
+export const App: React.FC = () => {
   const { language, t } = useLanguage();
-
-  // Navigation tabs
-  const [currentTab, setCurrentTab] = useState<
-    'camera' | 'vocab' | 'chat' | 'lessons' | 'game' | 'tips'
-  >('camera');
-
-  // Themes: Light modern (Eye-friendly), Warm Parchment (Book Read), Night Forest (Eye-safe dark)
-  const [theme, setTheme] = useState<ThemeStyle>(
-    (StorageService.getTheme() as ThemeStyle) || 'sage-cream'
-  );
-
-  // Phone frame toggle for desktop view
-  const [isPhoneFrame, setIsPhoneFrame] = useState<boolean>(false);
-
-  // Voice assistance active state (speaking icons and actions)
-  const [isVoiceAssistActive, setIsVoiceAssistActive] = useState<boolean>(true);
-
-  // Memory & Backup Modal
-  const [isMemoryModalOpen, setIsMemoryModalOpen] = useState<boolean>(false);
-  // Android Project Native Modal
-  const [isAndroidModalOpen, setIsAndroidModalOpen] = useState<boolean>(false);
-  // Android Install Guide Modal
-  const [isInstallGuideOpen, setIsInstallGuideOpen] = useState<boolean>(false);
-
-  // PWA WebAPK Install hook
   const { isInstallable, install } = usePWAInstall();
 
-  // Core Persistent State
-  const [savedWords, setSavedWords] = useState<VocabWord[]>([]);
-  const [scanHistory, setScanHistory] = useState<ScanResult[]>([]);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [quizResults, setQuizResults] = useState<QuizAttempt[]>([]);
-  const [progress, setProgress] = useState<UserProgress>(StorageService.getProgress());
+  // Active Tab (Default to Home on launch)
+  const [activeTab, setActiveTab] = useState<NavTab>('home');
+
+  // Completed Lessons state
+  const [completedLessons, setCompletedLessons] = useState<Record<string, boolean>>(() => {
+    return StorageService.getCompletedLessons();
+  });
+
+  // Welcome Modal state (shows on first visit)
+  const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState<boolean>(() => {
+    try {
+      const seen = localStorage.getItem('mahmoud_seen_welcome_v1');
+      return seen === null;
+    } catch {
+      return false;
+    }
+  });
+
+  // Theme State
+  const [theme, setTheme] = useState<ThemeStyle>(() => {
+    return (StorageService.getTheme() as ThemeStyle) || 'sage-cream';
+  });
+
+  // User Progress
+  const [progress, setProgress] = useState<UserProgress>(() => {
+    return StorageService.getProgress();
+  });
+
+  // Saved Words (Merge default + custom stored)
+  const [savedWords, setSavedWords] = useState<VocabWord[]>(() => {
+    const custom = StorageService.getSavedWords();
+    const map = new Map<string, VocabWord>();
+    DEFAULT_VOCABULARY.forEach((w) => map.set(w.english.toLowerCase(), w));
+    custom.forEach((w) => map.set(w.english.toLowerCase(), w));
+    return Array.from(map.values());
+  });
+
+  // Scans History
+  const [scanHistory, setScanHistory] = useState<ScanResult[]>(() => {
+    return StorageService.getScanHistory();
+  });
+
+  // Chat History
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
+    const saved = StorageService.getChatHistory();
+    if (saved.length > 0) return saved;
+    return [
+      {
+        id: 'msg-welcome',
+        role: 'assistant',
+        content:
+          language === 'ar'
+            ? 'أهلاً بك يا بطل! أنا مستر محمود علي، معلمك ومستشارك الشخصي للغة الإنجليزية ومدعوم بالذكاء الاصطناعي. اسألني أي سؤال في القواعد، النطق، تصحيح الجمل، أو لنبدأ محادثة ممتعة معاً!'
+            : 'Welcome! I am Mr. Mahmoud Ali, your dedicated English tutor powered by AI. Ask me any question about grammar, pronunciation, sentence correction, or let’s practice a live conversation!',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      },
+    ];
+  });
+
   const [isChatLoading, setIsChatLoading] = useState<boolean>(false);
 
-  // Load persistent data from storage on mount
-  const refreshStorageData = () => {
-    const storedCustomWords = StorageService.getSavedWords();
-    const mergedWords = [...storedCustomWords];
-    DEFAULT_VOCABULARY.forEach((defaultWord) => {
-      if (!mergedWords.some((w) => w.english.toLowerCase() === defaultWord.english.toLowerCase())) {
-        mergedWords.push(defaultWord);
-      }
-    });
+  // Quizzes History
+  const [quizHistory, setQuizHistory] = useState<QuizAttempt[]>(() => {
+    return StorageService.getQuizResults();
+  });
 
-    setSavedWords(mergedWords);
-    setScanHistory(StorageService.getScanHistory());
-    setChatMessages(StorageService.getChatHistory());
-    setQuizResults(StorageService.getQuizResults());
-    setProgress(StorageService.getProgress());
-  };
+  // Modals & Display Options
+  const [isMemoryModalOpen, setIsMemoryModalOpen] = useState<boolean>(false);
+  const [isContactModalOpen, setIsContactModalOpen] = useState<boolean>(false);
+  const [isAndroidModalOpen, setIsAndroidModalOpen] = useState<boolean>(false);
+  const [isInstallGuideOpen, setIsInstallGuideOpen] = useState<boolean>(false);
+  const [isPhoneFrame, setIsPhoneFrame] = useState<boolean>(false);
 
-  useEffect(() => {
-    refreshStorageData();
-  }, []);
+  const [isVoiceAssistActive, setIsVoiceAssistActive] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('mahmoud_voice_assist');
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch {
+      return true;
+    }
+  });
 
+  // Sync theme changes
   const handleThemeChange = (newTheme: ThemeStyle) => {
     setTheme(newTheme);
     StorageService.setTheme(newTheme);
   };
 
-  // Add / Save Word
-  const handleSaveWord = (word: VocabWord) => {
+  // Sync voice assist
+  const handleToggleVoiceAssist = () => {
+    setIsVoiceAssistActive((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('mahmoud_voice_assist', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  // Reload state from StorageService on data restore
+  const handleDataRestored = () => {
+    setProgress(StorageService.getProgress());
+    const custom = StorageService.getSavedWords();
+    const map = new Map<string, VocabWord>();
+    DEFAULT_VOCABULARY.forEach((w) => map.set(w.english.toLowerCase(), w));
+    custom.forEach((w) => map.set(w.english.toLowerCase(), w));
+    setSavedWords(Array.from(map.values()));
+    setScanHistory(StorageService.getScanHistory());
+    setChatMessages(StorageService.getChatHistory());
+    setQuizHistory(StorageService.getQuizResults());
+    setTheme((StorageService.getTheme() as ThemeStyle) || 'sage-cream');
+  };
+
+  // Word handlers
+  const handleSaveWord = useCallback((word: VocabWord) => {
     StorageService.saveWord(word);
-    refreshStorageData();
-  };
+    setSavedWords((prev) => {
+      const exists = prev.findIndex((w) => w.english.toLowerCase() === word.english.toLowerCase());
+      if (exists >= 0) {
+        const next = [...prev];
+        next[exists] = { ...next[exists], ...word };
+        return next;
+      }
+      return [word, ...prev];
+    });
+    setProgress(StorageService.getProgress());
+  }, []);
 
-  const handleDeleteWord = (id: string) => {
-    StorageService.deleteWord(id);
-    refreshStorageData();
-  };
+  const handleDeleteWord = useCallback((wordId: string) => {
+    StorageService.deleteWord(wordId);
+    setSavedWords((prev) => prev.filter((w) => w.id !== wordId));
+  }, []);
 
-  // Add Scan Result
-  const handleAddScanResult = (scan: ScanResult) => {
+  // Scan handlers
+  const handleAddScanResult = useCallback((scan: ScanResult) => {
     StorageService.addScanResult(scan);
-    refreshStorageData();
-  };
+    setScanHistory(StorageService.getScanHistory());
+    setProgress(StorageService.getProgress());
+  }, []);
 
-  const handleDeleteScan = (id: string) => {
+  const handleDeleteScan = useCallback((id: string) => {
     StorageService.deleteScan(id);
-    refreshStorageData();
-  };
+    setScanHistory(StorageService.getScanHistory());
+  }, []);
 
-  // Chat message send
+  // Lesson completion handler
+  const handleMarkLessonCompleted = useCallback((lessonId: string) => {
+    const updated = StorageService.markLessonCompleted(lessonId);
+    setCompletedLessons(updated);
+  }, []);
+
+  // Quiz handlers
+  const handleSaveQuizResult = useCallback((result: QuizAttempt) => {
+    const updated = StorageService.saveQuizResult(result);
+    setQuizHistory(updated);
+    setProgress(StorageService.getProgress());
+  }, []);
+
+  // Game score handler
+  const handleUpdateHighScore = useCallback((score: number) => {
+    StorageService.updateGameHighScore(score);
+    setProgress(StorageService.getProgress());
+  }, []);
+
+  // Chat handlers
   const handleSendMessage = async (text: string) => {
+    if (!text.trim()) return;
+
     const userMsg: ChatMessage = {
-      id: 'chat-' + Date.now(),
+      id: 'msg-' + Date.now(),
       role: 'user',
-      content: text,
-      timestamp: new Date().toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
+      content: text.trim(),
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
-    const newHistory = [...chatMessages, userMsg];
-    setChatMessages(newHistory);
-    StorageService.saveChatHistory(newHistory);
+    const newMessages = [...chatMessages, userMsg];
+    setChatMessages(newMessages);
+    StorageService.saveChatHistory(newMessages);
     setIsChatLoading(true);
 
     try {
-      const res = await fetch('/api/gemini/chat', {
+      const response = await fetch('/api/gemini/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: newHistory.slice(-6),
-          userMessage: text,
+          messages: chatMessages,
+          userMessage: text.trim(),
         }),
       });
 
-      const data = await res.json();
-      const replyContent =
-        data.reply ||
-        (language === 'ar'
-          ? 'عفواً، واجهت مشكلة في معالجة طلبك حالياً، هل يمكنك إعادة صياغة السؤال؟'
-          : 'Sorry, I encountered an issue processing your request. Could you rephrase your question?');
+      if (!response.ok) {
+        throw new Error('فشل الرد من الخادم');
+      }
 
-      const botMsg: ChatMessage = {
-        id: 'chat-bot-' + Date.now(),
+      const data = await response.json();
+      const assistantText = data.reply || 'أحسنت السؤال يا صديقي! استمر في التعلم دائماً.';
+
+      const assistantMsg: ChatMessage = {
+        id: 'msg-' + (Date.now() + 1),
         role: 'assistant',
-        content: replyContent,
-        timestamp: new Date().toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
+        content: assistantText,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
-      const updatedHistory = [...newHistory, botMsg];
-      setChatMessages(updatedHistory);
-      StorageService.saveChatHistory(updatedHistory);
-    } catch (err: any) {
-      console.error('Chat error:', err);
+      const updated = [...newMessages, assistantMsg];
+      setChatMessages(updated);
+      StorageService.saveChatHistory(updated);
+      playUiSound('pop');
+    } catch (err) {
+      // Graceful offline/fallback response
       const fallbackMsg: ChatMessage = {
-        id: 'chat-err-' + Date.now(),
+        id: 'msg-err-' + Date.now(),
         role: 'assistant',
         content:
           language === 'ar'
-            ? 'مرحباً بك يا بطل! يسعدني دائماً مساعدتك في التدرب على الإنجليزية. هل تود أن نراجع نطق كلمات الكاميرا أو نجري محادثة سريعة في المطعم؟'
-            : 'Welcome champion! I am always glad to assist you in practicing English. Would you like to review camera words or have a quick dialogue?',
-        timestamp: new Date().toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
+            ? 'أهلاً بك يا بطل! يبدو أن هناك انقطاعاً مؤقتاً في الاتصال أو لم يتم تفعيل مفتاح Gemini بعد. ومع ذلك، أنا مستر محمود علي ومستعد للإجابة ومساعدتك دائماً في قاموس الكلمات والدروس التفاعلية!'
+            : 'Hello! It looks like there is a temporary network issue or Gemini API key is being initialized. Rest assured, you can continue exploring the Visual Vocab, Lessons, and Quizzes seamlessly!',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
-      const updatedHistory = [...newHistory, fallbackMsg];
-      setChatMessages(updatedHistory);
-      StorageService.saveChatHistory(updatedHistory);
+      const updated = [...newMessages, fallbackMsg];
+      setChatMessages(updated);
+      StorageService.saveChatHistory(updated);
     } finally {
       setIsChatLoading(false);
     }
@@ -192,67 +284,77 @@ export default function App() {
 
   const handleClearChat = () => {
     StorageService.clearChatHistory();
-    setChatMessages([]);
+    setChatMessages([
+      {
+        id: 'msg-welcome-reset',
+        role: 'assistant',
+        content:
+          language === 'ar'
+            ? 'تم بدء محادثة جديدة! أنا مستر محمود علي معك خطوة بخطوة. اسألني أي سؤال في الإنجليزية!'
+            : 'New conversation started! I am Mr. Mahmoud Ali, ready to assist you step by step.',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      },
+    ]);
   };
 
-  // Save Quiz Result
-  const handleSaveQuizResult = (result: QuizAttempt) => {
-    StorageService.saveQuizResult(result);
-    refreshStorageData();
-  };
+  // Tab definitions
+  const tabs = useMemo(
+    () => [
+      { id: 'home' as NavTab, label: t('tabHome'), icon: Home, badge: 'Main' },
+      { id: 'lessons' as NavTab, label: t('tabLessons'), icon: BookOpen, badge: 'A1-B2' },
+      { id: 'vocab' as NavTab, label: t('tabVocab'), icon: Volume2, badge: savedWords.length },
+      { id: 'quiz' as NavTab, label: t('tabQuiz'), icon: HelpCircle, badge: 'Tests' },
+      { id: 'game' as NavTab, label: t('tabGame'), icon: Gamepad2, badge: 'Play' },
+      { id: 'chat' as NavTab, label: t('tabChat'), icon: MessageSquare, badge: 'AI' },
+      { id: 'contact' as NavTab, label: t('tabContact'), icon: Phone, badge: 'Mr. Ali' },
+      { id: 'camera' as NavTab, label: t('tabCamera'), icon: Camera, badge: 'Live AI' },
+      { id: 'tips' as NavTab, label: t('tabTips'), icon: Lightbulb, badge: 'Tips' },
+    ],
+    [t, savedWords.length]
+  );
 
-  // Update Game High Score
-  const handleUpdateHighScore = (score: number) => {
-    const updated = StorageService.updateGameHighScore(score);
-    setProgress((prev) => ({ ...prev, gameHighScore: updated }));
-  };
-
-  // Dynamic voice assistance on tab switch
-  const handleSelectTab = (tab: 'camera' | 'vocab' | 'chat' | 'lessons' | 'game' | 'tips') => {
-    playUiSound('tap');
-    setCurrentTab(tab);
-    if (isVoiceAssistActive) {
-      const tabVoiceMap: Record<string, { en: string; ar: string }> = {
-        camera: { en: 'Camera Translation', ar: 'ترجمة الكاميرا' },
-        vocab: { en: 'Speaking Vocabulary', ar: 'قاموس الكلمات الناطقة' },
-        chat: { en: 'AI English Tutor', ar: 'شات المعلم الذكي' },
-        lessons: { en: 'Lessons and Quizzes', ar: 'الدروس والاختبارات' },
-        game: { en: 'Educational Game', ar: 'اللعبة التعليمية' },
-        tips: { en: 'Learning Tips', ar: 'نصائح باللغة العربية' },
-      };
-      const info = tabVoiceMap[tab];
-      if (info) {
-        if (language === 'ar') {
-          speakWordWithExplanation(info.en, info.ar);
-        } else {
-          speakWordWithExplanation(info.ar, info.en);
-        }
-      }
-    }
-  };
-
-  const getThemeClass = () => {
+  // Theme styling wrapper
+  const themeClasses = useMemo(() => {
     switch (theme) {
       case 'warm-parchment':
-        return 'bg-[#FAF8F5] text-slate-900';
+        return {
+          bg: 'bg-[#FBF8F3]',
+          text: 'text-stone-900',
+          navBg: 'bg-[#F4EFE6]/90 border-[#E7DFD5]',
+          activeTab: 'bg-amber-800 text-white shadow-md shadow-amber-950/10',
+          inactiveTab: 'text-stone-700 hover:text-stone-950 hover:bg-[#EAE3D6]',
+        };
       case 'night-forest':
-        return 'bg-[#0f172a] text-slate-100';
+        return {
+          bg: 'bg-[#0F172A]',
+          text: 'text-slate-100',
+          navBg: 'bg-slate-900/90 border-slate-800',
+          activeTab: 'bg-indigo-600 text-white shadow-md shadow-indigo-900/30',
+          inactiveTab: 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80',
+        };
       case 'sage-cream':
       default:
-        return 'bg-gradient-to-br from-slate-50 via-blue-50/20 to-teal-50/20 text-slate-900';
+        return {
+          bg: 'bg-[#F8FAF8]',
+          text: 'text-slate-900',
+          navBg: 'bg-white/90 border-slate-200/90',
+          activeTab: 'bg-teal-700 text-white shadow-md shadow-teal-950/10',
+          inactiveTab: 'text-slate-600 hover:text-slate-900 hover:bg-slate-100',
+        };
     }
-  };
+  }, [theme]);
 
   return (
     <div
-      className={`min-h-screen ${getThemeClass()} transition-colors duration-300 flex flex-col font-sans`}
+      className={`min-h-screen ${themeClasses.bg} ${themeClasses.text} flex flex-col font-sans transition-colors duration-300 selection:bg-teal-200 selection:text-teal-950`}
     >
-      {/* Header Bar */}
+      {/* App Header */}
       <Header
         theme={theme}
         onThemeChange={handleThemeChange}
         progress={progress}
         onOpenMemoryModal={() => setIsMemoryModalOpen(true)}
+        onOpenContactModal={() => setIsContactModalOpen(true)}
         onOpenAndroidModal={() => setIsAndroidModalOpen(true)}
         onOpenInstallGuide={() => setIsInstallGuideOpen(true)}
         isInstallable={isInstallable}
@@ -260,122 +362,226 @@ export default function App() {
         isPhoneFrame={isPhoneFrame}
         onTogglePhoneFrame={() => setIsPhoneFrame(!isPhoneFrame)}
         isVoiceAssistActive={isVoiceAssistActive}
-        onToggleVoiceAssist={() => setIsVoiceAssistActive(!isVoiceAssistActive)}
+        onToggleVoiceAssist={handleToggleVoiceAssist}
       />
 
-      {/* Main Container / Phone Mockup Wrapper */}
-      <main className="flex-1 w-full flex justify-center py-4 px-2 sm:px-4">
-        <div
-          className={`w-full transition-all duration-300 ${
-            isPhoneFrame
-              ? 'max-w-[440px] bg-white/95 rounded-[42px] p-4 sm:p-5 border-8 border-slate-900 shadow-2xl relative my-auto'
-              : 'max-w-4xl'
-          }`}
-        >
-          {/* Phone Frame Speaker Notch */}
-          {isPhoneFrame && (
-            <div className="w-28 h-4 bg-slate-900 rounded-full mx-auto mb-4 flex items-center justify-center gap-2">
-              <div className="w-10 h-1.5 bg-slate-700 rounded-full"></div>
-              <div className="w-2 h-2 bg-slate-700 rounded-full"></div>
+      {/* Main Tab Navigation Bar */}
+      <nav className={`sticky top-[57px] sm:top-[61px] z-20 backdrop-blur-md border-b ${themeClasses.navBg} transition-all`}>
+        <div className="max-w-6xl mx-auto px-2 sm:px-4 py-2">
+          <div className="flex items-center justify-start sm:justify-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  id={`tab-btn-${tab.id}`}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    if (isVoiceAssistActive) {
+                      speakTabTransition(tab.label, language as 'ar' | 'en');
+                    } else {
+                      playUiSound('tap');
+                    }
+                  }}
+                  className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 active:scale-95 ${
+                    isActive ? themeClasses.activeTab : themeClasses.inactiveTab
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${isActive ? 'scale-110' : ''} transition-transform`} />
+                  <span>{tab.label}</span>
+                  {tab.badge && (
+                    <span
+                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
+                        isActive
+                          ? 'bg-white/20 text-white'
+                          : 'bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                      }`}
+                    >
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content Area (Optional Phone Bezel Simulation) */}
+      <main className="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6">
+        {/* High-Graphic Master Studio Hero Banner */}
+        <div className="mb-5 sm:mb-6 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 text-white p-4 sm:p-6 border border-indigo-500/25 shadow-xl shadow-indigo-950/20 relative overflow-hidden">
+          {/* Ambient luminous glow circles */}
+          <div className="absolute top-0 end-0 w-72 h-72 bg-teal-500/15 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16"></div>
+          <div className="absolute bottom-0 start-0 w-72 h-72 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none -ml-16 -mb-16"></div>
+
+          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <span>{language === 'ar' ? 'الذكاء الاصطناعي والكاميرا الحية' : 'AI Vision & Live Camera'}</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold bg-teal-500/20 text-teal-300 border border-teal-400/30 shadow-2xs">
+                  <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
+                  <span>{language === 'ar' ? 'منظومة تفاعلية متكاملة' : 'Integrated Learning Hub'}</span>
+                </span>
+              </div>
+
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white font-serif flex items-center gap-2">
+                <span>{language === 'ar' ? 'أكاديمية مستر محمود علي للإنجليزية' : 'Mr. Mahmoud Ali English Academy'}</span>
+              </h2>
+
+              <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
+                {language === 'ar'
+                  ? 'تعلم الإنجليزية بترجمة الكاميرا الفورية، وقاموس مصوّر ذكي، ودروس واختبارات تفاعلية، وشات ذكي متقدم مع مستر محمود علي.'
+                  : 'Master English with real-time camera translation, smart visual dictionary, interactive lessons & quizzes, and AI tutor Mr. Mahmoud Ali.'}
+              </p>
             </div>
-          )}
 
-          {/* Desktop & Tablet Top Navigation Tabs */}
-          <nav className="mb-5 bg-white/90 backdrop-blur-md p-1.5 rounded-2xl border border-slate-200/90 shadow-2xs hidden sm:flex items-center justify-between gap-1">
-            <button
-              onClick={() => handleSelectTab('camera')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all ${
-                currentTab === 'camera'
-                  ? 'bg-gradient-to-r from-blue-700 via-indigo-600 to-teal-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              <Camera className="w-4 h-4" />
-              <span>{t('tabCamera')}</span>
-            </button>
+            {/* Quick Stats Banner */}
+            <div className="flex flex-wrap md:flex-col items-stretch gap-2.5 w-full md:w-auto shrink-0">
+              <div className="flex items-center justify-between gap-3.5 px-4 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-xs shadow-inner">
+                <div className="flex items-center gap-2 text-slate-200">
+                  <BookOpen className="w-4 h-4 text-blue-400" />
+                  <span className="font-semibold">{savedWords.length} {language === 'ar' ? 'كلمة' : 'Words'}</span>
+                </div>
+                <div className="w-px h-4 bg-white/20"></div>
+                <div className="flex items-center gap-2 text-amber-300 font-semibold">
+                  <Flame className="w-4 h-4 text-amber-400 animate-pulse" />
+                  <span>{progress.streakDays} {language === 'ar' ? 'يوم' : 'Days'}</span>
+                </div>
+                <div className="w-px h-4 bg-white/20"></div>
+                <div className="flex items-center gap-2 text-emerald-300 font-semibold">
+                  <Award className="w-4 h-4 text-emerald-400" />
+                  <span>{progress.gameHighScore} {language === 'ar' ? 'نقطة' : 'Pts'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-            <button
-              onClick={() => handleSelectTab('vocab')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all ${
-                currentTab === 'vocab'
-                  ? 'bg-gradient-to-r from-blue-700 via-indigo-600 to-teal-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              <Volume2 className="w-4 h-4" />
-              <span>{t('tabVocab')}</span>
-            </button>
+        {isPhoneFrame ? (
+          <div className="max-w-[420px] mx-auto bg-black rounded-[48px] p-3.5 shadow-2xl ring-8 ring-slate-800/40 border-4 border-slate-700 my-4 transition-all">
+            {/* Phone Top Speaker & Camera Notch */}
+            <div className="w-full flex justify-center py-2 relative">
+              <div className="w-24 h-4 bg-slate-900 rounded-full flex items-center justify-end px-3">
+                <div className="w-2 h-2 rounded-full bg-blue-900/60 ring-1 ring-blue-500/30"></div>
+              </div>
+            </div>
 
-            <button
-              onClick={() => handleSelectTab('chat')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all ${
-                currentTab === 'chat'
-                  ? 'bg-gradient-to-r from-blue-700 via-indigo-600 to-teal-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              <MessageSquare className="w-4 h-4" />
-              <span>{t('tabChat')}</span>
-            </button>
+            {/* Phone Screen Canvas */}
+            <div className={`rounded-[36px] overflow-hidden ${themeClasses.bg} min-h-[720px] max-h-[820px] overflow-y-auto p-4`}>
+              {activeTab === 'home' && (
+                <HomeSection
+                  onNavigateTab={(tab) => {
+                    setActiveTab(tab as NavTab);
+                    if (isVoiceAssistActive) {
+                      const found = tabs.find((t) => t.id === tab);
+                      if (found) speakTabTransition(found.label, language as 'ar' | 'en');
+                    }
+                  }}
+                  progress={progress}
+                  totalWords={savedWords.length}
+                  featuredWord={savedWords[0]}
+                />
+              )}
+              {activeTab === 'lessons' && (
+                <LessonsSection
+                  completedLessons={completedLessons}
+                  onMarkLessonCompleted={handleMarkLessonCompleted}
+                />
+              )}
+              {activeTab === 'vocab' && (
+                <SpeakingVocab
+                  allWords={savedWords}
+                  onAddCustomWord={handleSaveWord}
+                  onDeleteWord={handleDeleteWord}
+                />
+              )}
+              {activeTab === 'quiz' && (
+                <QuizzesSection
+                  onSaveQuizResult={handleSaveQuizResult}
+                  quizHistory={quizHistory}
+                />
+              )}
+              {activeTab === 'game' && (
+                <InteractiveGameSection
+                  highScore={progress.gameHighScore}
+                  onUpdateHighScore={handleUpdateHighScore}
+                />
+              )}
+              {activeTab === 'chat' && (
+                <AiTutorChat
+                  messages={chatMessages}
+                  onSendMessage={handleSendMessage}
+                  onClearChat={handleClearChat}
+                  isLoading={isChatLoading}
+                  onSaveWord={handleSaveWord}
+                />
+              )}
+              {activeTab === 'contact' && <ContactSection />}
+              {activeTab === 'camera' && (
+                <CameraTranslator
+                  onSaveWord={handleSaveWord}
+                  savedWords={savedWords}
+                  scanHistory={scanHistory}
+                  onAddScanResult={handleAddScanResult}
+                  onDeleteScan={handleDeleteScan}
+                />
+              )}
+              {activeTab === 'tips' && <ArabicTips />}
+            </div>
 
-            <button
-              onClick={() => handleSelectTab('lessons')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all ${
-                currentTab === 'lessons'
-                  ? 'bg-gradient-to-r from-blue-700 via-indigo-600 to-teal-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              <GraduationCap className="w-4 h-4" />
-              <span>{t('tabLessons')}</span>
-            </button>
-
-            <button
-              onClick={() => handleSelectTab('game')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all ${
-                currentTab === 'game'
-                  ? 'bg-gradient-to-r from-blue-700 via-indigo-600 to-teal-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              <Gamepad2 className="w-4 h-4" />
-              <span>{t('tabGame')}</span>
-            </button>
-
-            <button
-              onClick={() => handleSelectTab('tips')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all ${
-                currentTab === 'tips'
-                  ? 'bg-gradient-to-r from-blue-700 via-indigo-600 to-teal-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              <Lightbulb className="w-4 h-4" />
-              <span>{t('tabTips')}</span>
-            </button>
-          </nav>
-
-          {/* Active Tab View */}
-          <div className="pb-20 sm:pb-8">
-            {currentTab === 'camera' && (
-              <CameraTranslator
-                onSaveWord={handleSaveWord}
-                savedWords={savedWords}
-                scanHistory={scanHistory}
-                onAddScanResult={handleAddScanResult}
-                onDeleteScan={handleDeleteScan}
+            {/* Phone Bottom Home Bar */}
+            <div className="w-full flex justify-center py-2.5">
+              <div className="w-32 h-1 bg-slate-600 rounded-full"></div>
+            </div>
+          </div>
+        ) : (
+          /* Standard Responsive Web Layout */
+          <div className="transition-all">
+            {activeTab === 'home' && (
+              <HomeSection
+                onNavigateTab={(tab) => {
+                  setActiveTab(tab as NavTab);
+                  if (isVoiceAssistActive) {
+                    const found = tabs.find((t) => t.id === tab);
+                    if (found) speakTabTransition(found.label, language as 'ar' | 'en');
+                  }
+                }}
+                progress={progress}
+                totalWords={savedWords.length}
+                featuredWord={savedWords[0]}
               />
             )}
-
-            {currentTab === 'vocab' && (
+            {activeTab === 'lessons' && (
+              <LessonsSection
+                completedLessons={completedLessons}
+                onMarkLessonCompleted={handleMarkLessonCompleted}
+              />
+            )}
+            {activeTab === 'vocab' && (
               <SpeakingVocab
                 allWords={savedWords}
                 onAddCustomWord={handleSaveWord}
                 onDeleteWord={handleDeleteWord}
               />
             )}
-
-            {currentTab === 'chat' && (
+            {activeTab === 'quiz' && (
+              <QuizzesSection
+                onSaveQuizResult={handleSaveQuizResult}
+                quizHistory={quizHistory}
+              />
+            )}
+            {activeTab === 'game' && (
+              <InteractiveGameSection
+                highScore={progress.gameHighScore}
+                onUpdateHighScore={handleUpdateHighScore}
+              />
+            )}
+            {activeTab === 'chat' && (
               <AiTutorChat
                 messages={chatMessages}
                 onSendMessage={handleSendMessage}
@@ -384,103 +590,25 @@ export default function App() {
                 onSaveWord={handleSaveWord}
               />
             )}
-
-            {currentTab === 'lessons' && (
-              <LessonsAndQuizzes
-                onSaveQuizResult={handleSaveQuizResult}
-                quizHistory={quizResults}
+            {activeTab === 'contact' && <ContactSection />}
+            {activeTab === 'camera' && (
+              <CameraTranslator
+                onSaveWord={handleSaveWord}
+                savedWords={savedWords}
+                scanHistory={scanHistory}
+                onAddScanResult={handleAddScanResult}
+                onDeleteScan={handleDeleteScan}
               />
             )}
-
-            {currentTab === 'game' && (
-              <EducationalGame
-                highScore={progress.gameHighScore}
-                onUpdateHighScore={handleUpdateHighScore}
-              />
-            )}
-
-            {currentTab === 'tips' && <ArabicTips />}
+            {activeTab === 'tips' && <ArabicTips />}
           </div>
-        </div>
+        )}
       </main>
 
-      {/* Mobile Native Bottom Navigation Bar (Ultra Polished Native Feel) */}
-      <nav className="sm:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 z-40 px-2 pt-1.5 pb-2.5 flex items-center justify-around shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
-        <button
-          onClick={() => handleSelectTab('camera')}
-          className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl min-h-[48px] transition-all active:scale-95 ${
-            currentTab === 'camera'
-              ? 'bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-600 text-white shadow-sm shadow-indigo-500/20 font-bold'
-              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70'
-          }`}
-        >
-          <Camera className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5 tracking-tight font-medium">{t('tabCamera')}</span>
-        </button>
+      {/* Offline Indicator */}
+      <OfflineIndicator />
 
-        <button
-          onClick={() => handleSelectTab('vocab')}
-          className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl min-h-[48px] transition-all active:scale-95 ${
-            currentTab === 'vocab'
-              ? 'bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-600 text-white shadow-sm shadow-indigo-500/20 font-bold'
-              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70'
-          }`}
-        >
-          <Volume2 className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5 tracking-tight font-medium">{t('tabVocab')}</span>
-        </button>
-
-        <button
-          onClick={() => handleSelectTab('chat')}
-          className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl min-h-[48px] transition-all active:scale-95 relative ${
-            currentTab === 'chat'
-              ? 'bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-600 text-white shadow-sm shadow-indigo-500/20 font-bold'
-              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70'
-          }`}
-        >
-          <MessageSquare className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5 tracking-tight font-medium">{t('tabChat')}</span>
-          <span className="absolute 1 top-1 right-3 w-2 h-2 rounded-full bg-emerald-400 border border-white"></span>
-        </button>
-
-        <button
-          onClick={() => handleSelectTab('lessons')}
-          className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl min-h-[48px] transition-all active:scale-95 ${
-            currentTab === 'lessons'
-              ? 'bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-600 text-white shadow-sm shadow-indigo-500/20 font-bold'
-              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70'
-          }`}
-        >
-          <GraduationCap className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5 tracking-tight font-medium">{t('tabLessons')}</span>
-        </button>
-
-        <button
-          onClick={() => handleSelectTab('game')}
-          className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl min-h-[48px] transition-all active:scale-95 ${
-            currentTab === 'game'
-              ? 'bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-600 text-white shadow-sm shadow-indigo-500/20 font-bold'
-              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70'
-          }`}
-        >
-          <Gamepad2 className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5 tracking-tight font-medium">{t('tabGame')}</span>
-        </button>
-
-        <button
-          onClick={() => handleSelectTab('tips')}
-          className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl min-h-[48px] transition-all active:scale-95 ${
-            currentTab === 'tips'
-              ? 'bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-600 text-white shadow-sm shadow-indigo-500/20 font-bold'
-              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70'
-          }`}
-        >
-          <Lightbulb className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5 tracking-tight font-medium">{t('tabTips')}</span>
-        </button>
-      </nav>
-
-      {/* Memory Manager & Data Persistence Modal */}
+      {/* Memory & Backup Manager Modal */}
       <MemoryManagerModal
         isOpen={isMemoryModalOpen}
         onClose={() => setIsMemoryModalOpen(false)}
@@ -488,26 +616,68 @@ export default function App() {
         savedWordsCount={savedWords.length}
         scanHistoryCount={scanHistory.length}
         chatCount={chatMessages.length}
-        quizzesCount={quizResults.length}
-        onDataRestored={() => refreshStorageData()}
+        quizzesCount={quizHistory.length}
+        onDataRestored={handleDataRestored}
       />
 
-      {/* Android Native Project Modal */}
+      {/* Android Kotlin Project Modal */}
       <AndroidProjectModal
         isOpen={isAndroidModalOpen}
         onClose={() => setIsAndroidModalOpen(false)}
       />
 
-      {/* Android Install Guide & WebAPK Launcher */}
+      {/* Android Install & APK Guide Modal */}
       <AndroidInstallGuideModal
         isOpen={isInstallGuideOpen}
         onClose={() => setIsInstallGuideOpen(false)}
-        onInstallPwa={install}
         isInstallable={isInstallable}
+        onInstallPwa={install}
       />
 
-      {/* Connectivity Indicator */}
-      <OfflineIndicator />
+      {/* Contact Us Modal (أ / محمود) */}
+      <ContactModal
+        isOpen={isContactModalOpen}
+        onClose={() => setIsContactModalOpen(false)}
+      />
+
+      {/* Welcome & Splash Modal */}
+      <WelcomeModal
+        isOpen={isWelcomeModalOpen}
+        onClose={() => {
+          setIsWelcomeModalOpen(false);
+          try {
+            localStorage.setItem('mahmoud_seen_welcome_v1', 'true');
+          } catch {}
+        }}
+      />
+
+      {/* Footer */}
+      <footer className="mt-auto border-t border-slate-200/80 py-5 px-4 text-center text-xs text-slate-500">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5 font-medium">
+            <span className="w-2 h-2 rounded-full bg-teal-500"></span>
+            <span>Mahmoud English • تطبيق محمود إنجلش الناطق والمصوّر</span>
+          </div>
+
+          <div className="flex items-center gap-3 text-[11px]">
+            <button
+              onClick={() => {
+                playUiSound('tap');
+                setIsContactModalOpen(true);
+              }}
+              className="text-teal-700 hover:text-teal-900 dark:text-teal-400 font-bold underline underline-offset-2 transition-colors cursor-pointer"
+            >
+              {language === 'ar' ? 'تواصل معنا (أ / محمود)' : 'Contact Us'}
+            </button>
+            <span className="text-slate-300">•</span>
+            <span className="text-slate-400">
+              {language === 'ar' ? 'مدعوم بالذكاء الاصطناعي والكاميرا الحية' : 'Powered by AI & Live Camera'}
+            </span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
-}
+};
+
+export default App;

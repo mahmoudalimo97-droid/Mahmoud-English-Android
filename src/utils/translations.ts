@@ -29,11 +29,14 @@ export const TRANSLATIONS = {
     welcomeAudioEn: 'Welcome to Mahmoud English! Tap any icon or picture to listen and learn.',
 
     // Navigation Tabs
+    tabHome: 'الرئيسية',
+    tabLessons: 'الدروس',
+    tabVocab: 'الكلمات بالصور',
+    tabQuiz: 'الاختبارات التفاعلية',
+    tabGame: 'اللعبة التفاعلية',
+    tabChat: 'الشات الذكي',
+    tabContact: 'تواصل معنا',
     tabCamera: 'ترجمة الكاميرا',
-    tabVocab: 'قاموس الكلمات',
-    tabChat: 'شات المعلم الذكي',
-    tabLessons: 'دروس واختبارات',
-    tabGame: 'لعبة تعليمية',
     tabTips: 'نصائح وتوجيهات',
 
     // Camera Translator
@@ -213,11 +216,14 @@ export const TRANSLATIONS = {
     welcomeAudioEn: 'Welcome to Mahmoud English! Tap any icon or picture to listen and learn.',
 
     // Navigation Tabs
-    tabCamera: 'Camera Translator',
+    tabHome: 'Home',
+    tabLessons: 'Lessons',
     tabVocab: 'Visual Vocab',
-    tabChat: 'AI Smart Tutor',
-    tabLessons: 'Lessons & Quiz',
-    tabGame: 'Learning Game',
+    tabQuiz: 'Quizzes',
+    tabGame: 'Educational Game',
+    tabChat: 'AI Tutor Chat',
+    tabContact: 'Contact Us',
+    tabCamera: 'Camera Translator',
     tabTips: 'Fluency Tips',
 
     // Camera Translator

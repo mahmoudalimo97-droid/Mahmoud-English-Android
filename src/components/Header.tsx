@@ -13,6 +13,8 @@ import {
   Flame,
   ArrowDownToLine,
   Layers,
+  Mic,
+  Phone,
 } from 'lucide-react';
 import { ThemeStyle, UserProgress } from '../types';
 import { speakEnglish, speakArabic, playUiSound } from '../utils/speech';
@@ -23,6 +25,7 @@ interface HeaderProps {
   onThemeChange: (theme: ThemeStyle) => void;
   progress: UserProgress;
   onOpenMemoryModal: () => void;
+  onOpenContactModal?: () => void;
   onOpenAndroidModal?: () => void;
   onOpenInstallGuide?: () => void;
   isInstallable?: boolean;
@@ -38,6 +41,7 @@ export const Header: React.FC<HeaderProps> = ({
   onThemeChange,
   progress,
   onOpenMemoryModal,
+  onOpenContactModal,
   onOpenAndroidModal,
   onOpenInstallGuide,
   isInstallable,
@@ -220,6 +224,21 @@ export const Header: React.FC<HeaderProps> = ({
               </>
             )}
           </button>
+
+          {/* Contact Us Button */}
+          {onOpenContactModal && (
+            <button
+              onClick={() => {
+                playUiSound('tap');
+                onOpenContactModal();
+              }}
+              title={language === 'ar' ? 'تواصل معنا (أ/ محمود)' : 'Contact Us (Mr. Mahmoud)'}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gradient-to-r from-teal-50 to-emerald-50 hover:from-teal-100 hover:to-emerald-100 border border-teal-200/90 text-teal-800 dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-800 rounded-xl text-xs font-bold transition-all shadow-2xs active:scale-95"
+            >
+              <Phone className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+              <span>{language === 'ar' ? 'تواصل معنا' : 'Contact'}</span>
+            </button>
+          )}
 
           {/* Memory & Backup Button */}
           <button

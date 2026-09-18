@@ -19,7 +19,7 @@ import confetti from 'canvas-confetti';
 import { Lesson, QuizQuestion, QuizAttempt } from '../types';
 import { LESSONS_DATA } from '../data/lessonsData';
 import { COMPREHENSIVE_QUIZ_QUESTIONS } from '../data/quizzesData';
-import { speakEnglish, speakArabic, playUiSound } from '../utils/speech';
+import { speakEnglish, speakArabic, playUiSound, speakTabTransition } from '../utils/speech';
 import { LessonVisualDiagram } from './LessonVisualDiagram';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -114,8 +114,8 @@ export const LessonsAndQuizzes: React.FC<LessonsAndQuizzesProps> = ({
         <div className="flex gap-2 w-full">
           <button
             onClick={() => {
-              playUiSound('tap');
               setActiveTab('lessons');
+              speakTabTransition(language === 'ar' ? 'الدروس التعليمية' : 'Lessons', language as 'ar' | 'en');
             }}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
               activeTab === 'lessons'
@@ -131,8 +131,8 @@ export const LessonsAndQuizzes: React.FC<LessonsAndQuizzesProps> = ({
 
           <button
             onClick={() => {
-              playUiSound('tap');
               setActiveTab('exam');
+              speakTabTransition(language === 'ar' ? 'الاختبار التفاعلي' : 'Interactive Quiz', language as 'ar' | 'en');
             }}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
               activeTab === 'exam'
