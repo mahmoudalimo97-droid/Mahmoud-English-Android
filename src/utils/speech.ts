@@ -145,6 +145,20 @@ const MALE_AR_KEYWORDS = [
 ];
 
 /**
+ * Strips all emojis, pictographs, symbols, and dingbats so speech synthesis pronounces words only.
+ */
+export function stripEmojis(text: string): string {
+  if (!text) return '';
+  return text
+    // Remove Extended Pictographic, Emojis, Dingbats, Variation Selectors, etc.
+    .replace(/[\p{Extended_Pictographic}\p{Emoji_Presentation}\p{Emoji}\uFE0F\u200D\u20E3]/gu, '')
+    // Fallback ranges for symbols
+    .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}\u{2300}-\u{23FF}\u{2B50}-\u{2B55}]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
  * Pronounce English text using a distinct, natural MALE voice
  */
 export function speakEnglish(text: string, rate: number = 0.88): Promise<void> {
@@ -159,9 +173,15 @@ export function speakEnglish(text: string, rate: number = 0.88): Promise<void> {
       return;
     }
 
+    const cleanText = stripEmojis(text);
+    if (!cleanText) {
+      resolve();
+      return;
+    }
+
     try {
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
+      const utterance = new SpeechSynthesisUtterance(cleanText);
       utterance.lang = 'en-US';
       utterance.rate = rate;
 
@@ -230,9 +250,15 @@ export function speakArabic(text: string, rate: number = 0.90): Promise<void> {
       return;
     }
 
+    const cleanText = stripEmojis(text);
+    if (!cleanText) {
+      resolve();
+      return;
+    }
+
     try {
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
+      const utterance = new SpeechSynthesisUtterance(cleanText);
       utterance.lang = 'ar-SA';
       utterance.rate = rate;
 

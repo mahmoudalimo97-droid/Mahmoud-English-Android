@@ -98,7 +98,7 @@ fun ContactScreen() {
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/201026362846"))
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/201287073964"))
                     context.startActivity(intent)
                 }
         ) {
@@ -116,13 +116,13 @@ fun ContactScreen() {
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "محادثة واتساب مباشرة",
+                        text = "دردشة واتساب مباشرة",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                     Text(
-                        text = "01026362846",
+                        text = "01287073964",
                         fontSize = 12.sp,
                         color = Color(0xFFE8F5E9)
                     )
@@ -145,7 +145,7 @@ fun ContactScreen() {
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable {
-                    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:01026362846"))
+                    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:01287073964"))
                     context.startActivity(intent)
                 }
         ) {
@@ -163,13 +163,13 @@ fun ContactScreen() {
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "اتصال هاتفي مباشر",
+                        text = "اتصال مباشر (مستر محمود)",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                     Text(
-                        text = "01026362846",
+                        text = "01287073964",
                         fontSize = 12.sp,
                         color = Emerald100
                     )

@@ -117,8 +117,42 @@ class TextToSpeechHelper(private val context: Context) : TextToSpeech.OnInitList
         }
     }
 
+    /**
+     * Strips emojis, pictographs, symbols, and dingbats so the TTS engine speaks words only.
+     */
+    fun cleanSpeechText(input: String): String {
+        if (input.isBlank()) return ""
+        val sb = StringBuilder()
+        var i = 0
+        while (i < input.length) {
+            val codePoint = input.codePointAt(i)
+            val charCount = Character.charCount(codePoint)
+
+            val isEmoji = (codePoint in 0x1F600..0x1F64F) || // Emoticons
+                          (codePoint in 0x1F300..0x1F5FF) || // Misc Symbols & Pictographs
+                          (codePoint in 0x1F680..0x1F6FF) || // Transport & Map
+                          (codePoint in 0x1F1E0..0x1F1FF) || // Flags
+                          (codePoint in 0x2600..0x26FF) ||   // Misc symbols (☀️, ⚡, ☕)
+                          (codePoint in 0x2700..0x27BF) ||   // Dingbats (✨, ❌, ✔️)
+                          (codePoint in 0xFE00..0xFE0F) ||   // Variation selectors
+                          (codePoint in 0x1F900..0x1F9FF) || // Supplemental Symbols
+                          (codePoint in 0x1FA70..0x1FAFF) || // Symbols & Pictographs Ext-A
+                          (codePoint == 0x200D) ||           // Zero-width joiner
+                          (codePoint in 0x2300..0x23FF) ||   // Misc Technical
+                          (codePoint in 0x2B50..0x2B55) ||   // Stars
+                          (codePoint in 0x20E3..0x20E4)
+
+            if (!isEmoji) {
+                sb.appendCodePoint(codePoint)
+            }
+            i += charCount
+        }
+        return sb.toString().replace(Regex("\\s+"), " ").trim()
+    }
+
     fun speakEnglish(text: String) {
-        if (!isInitialized || text.isBlank()) return
+        val cleanText = cleanSpeechText(text)
+        if (!isInitialized || cleanText.isBlank()) return
         try {
             val (voice, isExplicitMale) = findBestVoice("en")
             if (voice != null) {
@@ -138,14 +172,15 @@ class TextToSpeechHelper(private val context: Context) : TextToSpeech.OnInitList
             tts?.setPitch(pitch)
             tts?.setSpeechRate(0.86f)
 
-            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "en_utt_${System.currentTimeMillis()}")
+            tts?.speak(cleanText, TextToSpeech.QUEUE_FLUSH, null, "en_utt_${System.currentTimeMillis()}")
         } catch (e: Exception) {
             // Safe fallback
         }
     }
 
     fun speakArabic(text: String) {
-        if (!isInitialized || text.isBlank()) return
+        val cleanText = cleanSpeechText(text)
+        if (!isInitialized || cleanText.isBlank()) return
         try {
             val arLocale = Locale("ar")
             val (voice, isExplicitMale) = findBestVoice("ar")
@@ -166,7 +201,7 @@ class TextToSpeechHelper(private val context: Context) : TextToSpeech.OnInitList
             tts?.setPitch(pitch)
             tts?.setSpeechRate(0.88f)
 
-            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "ar_utt_${System.currentTimeMillis()}")
+            tts?.speak(cleanText, TextToSpeech.QUEUE_FLUSH, null, "ar_utt_${System.currentTimeMillis()}")
         } catch (e: Exception) {
             // Safe fallback
         }
