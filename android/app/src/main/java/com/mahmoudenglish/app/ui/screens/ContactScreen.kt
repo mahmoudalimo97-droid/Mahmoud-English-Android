@@ -82,11 +82,86 @@ fun ContactScreen() {
                 }
 
                 Text(
-                    text = "يسعدني دائماً تواصلكم للاستفسارات التعليمية، الدروس الخصوصية، ومتابعة نطق وتقدم الطلاب في اللغة الإنجليزية.",
-                    fontSize = 12.sp,
+                    text = "يسعدني دائماً تواصلكم للاستفسارات التعليمية وتصميم كتب ومذكرات ومناهج تعليمية واونلاين ومتابعة الطلاب.",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 18.sp
+                    lineHeight = 20.sp
                 )
+            }
+        }
+
+        // Educational Services Offered
+        Surface(
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 2.dp,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = "الخدمات التعليمية المتخصصة",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Emerald800
+                )
+
+                // 1. Inquiries
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Icon(imageVector = Icons.Default.HelpOutline, contentDescription = null, tint = Emerald700, modifier = Modifier.size(20.dp))
+                    Column {
+                        Text(text = "استفسارات تعليمية وتوجيه لغوي", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Text(text = "إجابة أسئلة القواعد ومتابعة نطق وتأسيس الطلاب.", fontSize = 11.sp, color = Stone600)
+                    }
+                }
+
+                Divider(color = MaterialTheme.colorScheme.surfaceVariant)
+
+                // 2. Booklets
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Icon(imageVector = Icons.Default.MenuBook, contentDescription = null, tint = Indigo800, modifier = Modifier.size(20.dp))
+                    Column {
+                        Text(text = "تصميم كتب ومذكرات تعليمية", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Text(text = "إعداد وتنسيق مذكرات شروحات، ملازم مراجعة، وكتب تأسيس.", fontSize = 11.sp, color = Stone600)
+                    }
+                }
+
+                Divider(color = MaterialTheme.colorScheme.surfaceVariant)
+
+                // 3. Curriculum
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Icon(imageVector = Icons.Default.School, contentDescription = null, tint = Blue800, modifier = Modifier.size(20.dp))
+                    Column {
+                        Text(text = "تصميم وتطوير مناهج تعليمية", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Text(text = "تأليف مناهج لغة إنجليزية تفاعلية للمدارس والمراكز.", fontSize = 11.sp, color = Stone600)
+                    }
+                }
+
+                Divider(color = MaterialTheme.colorScheme.surfaceVariant)
+
+                // 4. Online
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Icon(imageVector = Icons.Default.LaptopMac, contentDescription = null, tint = Teal700, modifier = Modifier.size(20.dp))
+                    Column {
+                        Text(text = "دروس ومحاضرات أونلاين", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Text(text = "حصص تفاعلية مباشرة عبر الإنترنت لشرح المناهج.", fontSize = 11.sp, color = Stone600)
+                    }
+                }
             }
         }
 

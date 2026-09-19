@@ -2,7 +2,7 @@
 
 @layer base {
   :root {
-    --font-ar: 'Cairo', 'Tajawal', system-ui, sans-serif;
+    --font-ar: 'Tajawal', 'Cairo', system-ui, -apple-system, sans-serif;
     --font-serif-ar: 'Amiri', 'Traditional Arabic', serif;
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -16,6 +16,7 @@
     width: 100%;
     margin: 0;
     padding: 0;
+    font-family: 'Tajawal', 'Cairo', system-ui, sans-serif;
   }
 
   #root {
