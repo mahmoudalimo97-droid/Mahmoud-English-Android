@@ -1,0 +1,4 @@
+# Ensure Unix line endings for shell scripts and Gradle wrappers
+* text=auto eol=lf
+*.bat text eol=crlf
+android/gradlew text eol=lf

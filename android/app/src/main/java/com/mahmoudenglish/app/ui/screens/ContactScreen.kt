@@ -121,7 +121,7 @@ fun ContactScreen() {
                     }
                 }
 
-                Divider(color = MaterialTheme.colorScheme.surfaceVariant)
+                HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
 
                 // 2. Booklets
                 Row(
@@ -135,7 +135,7 @@ fun ContactScreen() {
                     }
                 }
 
-                Divider(color = MaterialTheme.colorScheme.surfaceVariant)
+                HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
 
                 // 3. Curriculum
                 Row(
@@ -149,7 +149,7 @@ fun ContactScreen() {
                     }
                 }
 
-                Divider(color = MaterialTheme.colorScheme.surfaceVariant)
+                HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
 
                 // 4. Online
                 Row(
